@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="The News In In The Game Now" />
+    <meta name="keywords" content="It's All Chrome." />
+    <meta name="robots" content="index, follow" />
+    <meta
+      name="viewport"
+      content="minimal-ui, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="author" content="Pencil" />
+
+    <title>𝓟𝓮𝓷𝓬𝓲𝓵 𝓐𝓰𝓪𝓻𝓲𝓸 𝕳𝖚𝖇</title>
+
+    <link
+      id="favicon"
+      rel="icon"
+      type="image/png"
+      href="https://femcil.glitch.me/assets/img/ect/chat-gif.gif"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Ubuntu:700"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link href="https://femcil.glitch.me/assets/css/css.min.css" rel="stylesheet" />
+    <link href="https://femcil.glitch.me/assets/css/agario.css" rel="stylesheet" />
+    <link href="https://femcil.glitch.me/assets/css/gallery.css" rel="stylesheet" />
+    <link href="https://femcil.glitch.me/assets/css/dropper.css" rel="stylesheet" />
+    <script src="https://femcil.glitch.me/assets/js/quadtree.js"></script>
+    <script src="https://femcil.glitch.me/assets/js/main_out.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="https://femcil.glitch.me/assets/js/birthday-ui.js"></script>
+    <script>
+      document.onkeydown = function (e) {
+        if (
+          e.ctrlKey &&
+          (e.keyCode === 85 ||
+            e.keyCode === 75 ||
+            e.keyCode === 72 ||
+            e.keyCode === 79 ||
+            e.keyCode === 69 ||
+            e.keyCode === 71 ||
+            e.keyCode === 68 ||
+            e.keyCode === 70 ||
+            e.keyCode === 76 ||
+            e.keyCode === 66)
+        ) {
+          return false;
+        } else {
+          return true;
+        }
+      };
+      $(document).keypress("u", function (e) {
+        if (e.ctrlKey) {
+          return false;
+        } else {
+          return true;
+        }
+      });
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  </head>
+  <body>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <div
+      id="settings_hold"
+      onclick="if (event.target == this) this.hide()"
+      style="display: none"
+    >
+      <div id="settings_tab">
+        <div id="setting_top">Settings</div>
+        <div id="settings" class="checkbox">
+          <div style="margin: 6px">
+            <label><input id="showSkins" type="checkbox" />ѕкιηѕ</label>
+            <label><input id="showNames" type="checkbox" />ηαмєѕ</label>
+            <label><input id="darkTheme" type="checkbox" />∂αяк</label>
+            <label><input id="showColor" type="checkbox" />¢σℓσя</label>
+            <label><input id="showMass" type="checkbox" />мαѕѕ</label>
+            <label><input id="showChat" type="checkbox" />¢нαт</label>
+            <label><input id="showMinimap" type="checkbox" />мιηι мαρ</label>
+            <label><input id="showPosition" type="checkbox" />ρσѕιтιση</label>
+            <label><input id="showBorder" type="checkbox" />вσя∂єя</label>
+            <label><input id="showGrid" type="checkbox" />gяι∂</label>
+            <label><input id="moreZoom" type="checkbox" />zσσм-συт</label>
+            <label><input id="fillSkin" type="checkbox" />ƒιℓℓ ѕкιη</label>
+            <label><input id="backgroundSectors" type="checkbox" />вα¢кgяσυη∂ ѕє¢тσяѕ</label>
+            <label ><input id="jellyPhysics" type="checkbox" />נєℓℓу ρнуѕι¢ѕ</label>
+            <label><input id="playSounds" type="checkbox" />Sσυɳԃʂ
+              <input id="soundsVolume"
+                type="range"
+                min="0"
+                max="1"
+                step="any"
+              />
+            </label>
+          </div>
+        </div>
+        <div id="setting_top">Music</div>
+        <div style="margin: 6px">
+          <label
+            ><input id="music" type="checkbox" onclick="musics()" />Music</label
+          >
+          <div id="tack">
+            <label
+              ><input id="musictype1" type="checkbox" onclick="music()" />Music
+              1</label
+            >
+            <label
+              ><input id="musictype2" type="checkbox" onclick="music1()" />Music
+              2</label
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="overlays" style="display: none">
+      <div id="connecting"></div>
+      <div class="menu shadow">
+        <div class="form-group">
+          <img src="/assets/img/title.png" id="title" />
+        </div>
+        <div class="form-group">
+          <input
+            id="nick"
+            class="form-control"
+            placeholder="Nickname"
+            maxlength="150000"
+          />
+          <input id="skin" class="form-control" placeholder="Skin Name" />
+          <select
+            id="gamemode"
+            class="form-control"
+            onchange="setserver(this.value);gtag('event', 'agariosetserver');"
+            required=""
+          >
+            <!-- Main Servers -->
+            <optgroup label="The Main Server">
+              <option value="">All Servers are down!</option>
+            </optgroup>
+          </select>
+        </div>
+        <button id="play-btn" class="button-solid"></button>
+        <button
+          id="spectate-btn"
+          onclick="spectate()"
+          class="btn btn-warning btn-spectate btn-needs-server glyphicon glyphicon-🍩eye-open"
+        >
+          ✐
+        </button>
+        <button
+          id="gallery-btn"
+          onclick="openSkinsList()"
+          class="btn btn-play btn-primary btn-needs-server btn-info"
+        ></button>
+        <button id="cursor-btn" onclick="openmList()">Settings</button>
+      </div>
+      <!--Right-->
+      <div id="rightpanel">
+        <span class="text-muted">
+          <b>Music Is In The Settings. </b>
+        </span>
+        <div id="bar"></div>
+        <div id="footer">
+          <!--<a id="buttons" href="https://discord.gg/dCJCuBKtWM/" target="blank_">Discord Link!!!!!</a>-->
+        </div>
+        <div id="instructions">
+          <div id="bar"></div>
+          <center>
+            <span class="text-muted">
+              Move your mouse to control your cell<br />
+              Press <b>Space</b> to split<br />
+              Press <b>W</b> to eject some mass<br />
+              Press <b>Q</b> to activate minion mode<br />
+              while in <b>Minion mode</b> press w to eject mass and press space
+              to split minion<br />
+              Press <b>Q again</b> to deactivate minion mode<br />
+            </span>
+          </center>
+        </div>
+      </div>
+      <!--LEft-->
+      <div id="leftpanel">
+        
+      </div>
+      <script>
+        $(window).on("load", function () {
+          $(".loader-wrapper").fadeOut("slow");
+        });
+      </script>
+    </div>
+    <div
+      id="menu-btn"
+      onclick="mainmenu()"
+      class="btn btn-primary"
+      style="
+        position: absolute;
+        font-size: 10px;
+        top: 60px;
+        left: 175px;
+        width: 101px;
+      "
+    ><strong>Main Menu</strong> (esc)</div>
+    <input
+      type="text"
+      id="chat_textbox"
+      placeholder="𝗣𝗿𝗲𝘀𝘀 𝗘𝗻𝘁𝗲𝗿 𝗧𝗼 𝗖𝗵𝗮𝘁"
+      maxlength="140"
+    />
+    <div id="mobileStuff" style="display: none">
+        <div id="touchpad"></div>
+        <div id="touchCircle" style="display: none"></div>
+        <img src="/assets/img/split.png" id="splitBtn" />
+        <img src="/assets/img/eject.png" id="ejectBtn" />
+    </div>
+    <div style="font-family: 'Ubuntu'">&nbsp;</div>
+  </body>
+</html>
+<!---->
+<!--<div id="connecting"><center><div class="loader-wrapper"><span class="loader"><span class="loader-inner"></span></span></div></center></div>-->

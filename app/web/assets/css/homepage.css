@@ -1,0 +1,62 @@
+/******************************************************************************
+
+STARBUCKs GREEN LOL background: #329814;
+******************************************************************************/
+
+body {
+  background: #0f0f0f;
+  height: 100vh;
+  display: grid;
+  place-items: center;
+}
+
+#Multibar {
+  position:relative;
+  width:90%;
+  height:50%;
+  margin-top:-5%;
+  background-color: #1F1F1F;
+  border-radius: 0px 0px 50px 50px;
+}
+
+#logotxt {
+  color: #F0F0F0;
+  font-family: Fantasy;
+  text-align: center;
+  font-size: 200%;
+  margin-top: 0%;
+}
+
+.module-border-wrap {
+  max-width: 80%;
+  padding: 1rem;
+  position: center;
+  background: linear-gradient(45deg, #03e9f4, #6800ff, #2d8dff);
+  animation: shadow 20s linear infinite;
+  padding: 4px;
+  background-size: 400%;
+  box-shadow: 0 0 50px #6800ff, 0 0 75px #2d8dff, 0 0 100px #03e9f4;
+  border-radius: 15px;
+  color: #F0F0F0;
+  font-family: Fantasy;
+  font-size: 100%;
+}
+
+.module {
+  background: #222222;
+  color: white;
+  padding: 2rem;
+  border-radius: 15px;
+}
+
+@keyframes shadow {
+  0% {
+    background-position: 0 0;
+  }
+  50.01% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}

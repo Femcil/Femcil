@@ -1,0 +1,4 @@
+  <div id="alert" textcontent="panels disabled for windows pc issues :(">
+    <button id="ok_btn" onclick="alert_close()">OK</button>
+  </div>
+  

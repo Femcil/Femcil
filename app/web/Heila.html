@@ -1,0 +1,2520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heila AI Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://femcil.glitch.me/assets/js/birthday-ui.js"></script>
+    <style>
+        /* Custom CSS for glowing effects */
+        .glowing-text {
+            color: #fff; /* White text */
+            text-shadow:
+                0 0 5px #00f,   /* Blue glow */
+                0 0 10px #00f,
+                0 0 15px #00f,
+                0 0 20px #00f;
+        }
+
+        .glowing-container {
+            background-color: #1a1a1a; /* Dark background */
+            border: 2px solid #00f; /* Blue border */
+            box-shadow:
+                0 0 10px #00f,   /* Blue glow */
+                0 0 20px #00f,
+                0 0 30px #00f;
+        }
+
+        /* Ensure the message area scrolls */
+        #chat-messages {
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column; /* Stack children vertically */
+            background-color: #2a2a2a; /* Slightly lighter dark for message background */
+            border: 1px solid #333; /* Subtle border */
+            border-radius: 8px; /* Rounded corners */
+            padding: 1rem;
+            flex-grow: 1; /* Allow message area to take available vertical space */
+            min-height: 200px; /* Minimum height */
+            /* Added to help with potential overflow issues if messages are too wide */
+            overflow-x: hidden;
+        }
+
+        /* Style for individual messages */
+        .message {
+            margin-bottom: 0.5rem; /* Space between messages */
+            padding: 0; /* Padding is now on the content bubble */
+            border-radius: 0.75rem; /* Rounded corners for messages container */
+            max-width: 90%; /* Limit message width to allow space for pfp/name */
+            word-wrap: break-word; /* Break long words */
+            color: #fff; /* Default text color for messages */
+            display: flex; /* Use flexbox for layout */
+            align-items: flex-start; /* Align items to the top */
+            gap: 0.5rem; /* Space between pfp/name and message bubble */
+            /* Default alignment is left */
+            align-self: flex-start;
+            margin-right: auto;
+            margin-left: 0; /* Ensure margin-left is 0 for left alignment */
+            flex-direction: row; /* Ensure pfp is on the left */
+        }
+
+        /* User messages will now also align left, only changing background color */
+        .user-message {
+            /* Remove previous right alignment styles */
+            /* align-self: flex-end; */
+            /* flex-direction: row-reverse; */
+            /* margin-left: auto; */
+        }
+
+        .ai-message {
+             /* Keep default left alignment styles */
+             /* align-self: flex-start; */
+             /* flex-direction: row; */
+             /* margin-right: auto; */
+        }
+
+
+         /* Style for the message content bubble (applies to both user and AI) */
+        .message-content-bubble {
+             background-color: #444; /* Default background (AI) */
+             padding: 0.5rem 0.75rem; /* Apply padding to the content bubble */
+             border-radius: 0.75rem; /* Apply border-radius to the content bubble */
+             flex-grow: 1; /* Allow the content bubble to take available space */
+             /* Adjust max-width considering pfp width and gap */
+             /* Calc: 100% of message container - (pfp width + gap) */
+             max-width: calc(100% - 2rem - 0.5rem); /* 2rem pfp + 0.5rem gap */
+
+             /* General text wrapping for the bubble */
+             white-space: normal;
+             word-break: break-word;
+             overflow-wrap: break-word;
+             display: block; /* Ensure the bubble itself is a block container */
+         }
+
+         /* Specific background for user content bubble */
+         .user-message .message-content-bubble {
+             background-color: #007bff; /* User blue background */
+         }
+
+         /* Ensure text content elements within the bubble behave as expected */
+         /* Apply to both user and AI bubbles */
+         .message-content-bubble p,
+         .message-content-bubble div, /* This targets the inner div for multimodal text */
+         .message-content-bubble span,
+         .message-content-bubble em,
+         .message-content-bubble strong,
+         .message-content-bubble code,
+         .message-content-bubble a,
+         .message-content-bubble ul,
+         .message-content-bubble ol,
+         .message-content-bubble li,
+         .message-content-bubble h1,
+         .message-content-bubble h2,
+         .message-content-bubble h3,
+         .message-content-bubble h4,
+         .message-content-bubble h5,
+         .message-content-bubble h6,
+         .message-content-bubble hr,
+         .message-content-bubble blockquote,
+         .message-content-bubble pre,
+         .message-content-bubble table {
+             white-space: normal; /* Ensure normal white-space handling */
+             word-break: break-word; /* Ensure long words break */
+             overflow-wrap: break-word; /* Alternative for breaking long words */
+             /* Ensure display is appropriate for the element type */
+         }
+
+         /* Explicitly set display for block elements within the bubble */
+         .message-content-bubble p,
+         .message-content-bubble div,
+         .message-content-bubble ul,
+         .message-content-bubble ol,
+         .message-content-bubble li,
+         .message-content-bubble h1,
+         .message-content-bubble h2,
+         .message-content-bubble h3,
+         .message-content-bubble h4,
+         .message-content-bubble h5,
+         .message-content-bubble h6,
+         .message-content-bubble hr,
+         .message-content-bubble blockquote,
+         .message-content-bubble pre,
+         .message-content-bubble table {
+             display: block;
+         }
+
+         /* Explicitly set display for inline elements within the bubble */
+         .message-content-bubble em,
+         .message-content-bubble strong,
+         .message-content-bubble code,
+         .message-content-bubble a,
+         .message-content-bubble span {
+             display: inline;
+         }
+
+
+         /* Style for the profile picture (applies to both user and AI) */
+        .pfp {
+            width: 2rem; /* Adjust size as needed */
+            height: 2rem; /* Ensure it's a circle */
+            border-radius: 50%; /* Make it round */
+            object-fit: cover; /* Ensure image covers the area without distortion */
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+        /* Style for the name (applies to both user and AI) */
+        .name {
+            font-weight: bold;
+            color: #00f; /* Default blue color for the name (AI) */
+            margin-bottom: 0.25rem; /* Space between name and message */
+        }
+
+         /* Specific color for user name */
+         .user-message .name {
+             color: #fff; /* White color for user name */
+         }
+
+
+        /* Container for name and message content (applies to both user and AI) */
+        .content-container {
+             display: flex;
+             flex-direction: column; /* Stack name and message content vertically */
+             flex-grow: 1;
+        }
+
+
+         /* Style for the scrollbar to match the dark theme (Optional) */
+        #chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #chat-messages::-webkit-scrollbar-track {
+            background: #333;
+            border-radius: 10px;
+        }
+
+        #chat-messages::-webkit-scrollbar-thumb {
+            background: #00f; /* Blue glow color */
+            border-radius: 10px;
+        }
+
+        #chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #00bfff; /* Lighter blue on hover */
+        }
+
+        /* Style the input field and button for the dark theme */
+         /* Updated styles for textarea */
+        .input-area textarea {
+            background-color: #333; /* Dark background for input */
+            border-color: #555; /* Darker border */
+            color: #eee; /* Light text color */
+            /* Optional: Add focus glow */
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            resize: none; /* Prevent manual resizing by user */
+            min-height: 40px; /* Minimum height for the textarea */
+            padding: 0.5rem 1rem; /* Match padding of previous input */
+        }
+         .input-area textarea:focus {
+             border-color: #00f; /* Blue border on focus */
+             box-shadow: 0 0 8px rgba(0, 0, 255, 0.5); /* Blue glow on focus */
+         }
+
+
+        .input-area button {
+            background-color: #00f; /* Blue button */
+            /* Optional: Add hover/focus effects */
+            transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+         .input-area button:hover {
+             background-color: #00bfff; /* Lighter blue on hover */
+         }
+         .input-area button:focus {
+             box-shadow: 0 0 8px rgba(0, 0, 255, 0.5); /* Blue glow on focus */
+         }
+
+         /* Style for disabled button (grayed out) */
+         #send-button:disabled {
+             background-color: #555; /* Gray background */
+             cursor: not-allowed; /* Indicate it's not clickable */
+             box-shadow: none; /* Remove glow when disabled */
+         }
+
+
+        /* Style for the Clear History Button */
+        #clear-history-button {
+            background-color: #555; /* Dark gray background */
+            color: #eee; /* Light gray text */
+            border: none; /* No border */
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        #clear-history-button:hover {
+            background-color: #777; /* Lighter gray on hover */
+        }
+
+        /* Style for the Settings Button */
+        #settings-button {
+            background-color: #555; /* Dark gray background */
+            color: #eee; /* Light gray text */
+            border: none; /* No border */
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        #settings-button:hover {
+            background-color: #777; /* Lighter gray on hover */
+        }
+
+        /* Styles for the Settings Modal */
+        .settings-modal {
+            position: fixed; /* Stay in place */
+            z-index: 100; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.8); /* Black background with opacity */
+            display: none; /* Hidden by default */
+            justify-content: center; /* Center content horizontally */
+            align-items: center; /* Center content vertically */
+        }
+
+        .settings-content {
+            background-color: #1a1a1a; /* Dark background */
+            margin: auto;
+            padding: 20px;
+            border: 2px solid #00f; /* Blue border */
+            border-radius: 10px;
+            width: 80%; /* Adjust width as needed */
+            max-width: 500px; /* Max width */
+            box-shadow: 0 0 20px #00f; /* Blue glow */
+            color: #eee; /* Light text */
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .settings-content h2 {
+            text-align: center;
+            color: #00f; /* Blue heading */
+            margin-bottom: 1rem;
+        }
+
+        .settings-content label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .settings-content input[type="text"],
+        .settings-content input[type="file"] {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background-color: #333;
+            color: #eee;
+        }
+
+        .settings-content button {
+             background-color: #00f;
+             color: white;
+             padding: 0.75rem;
+             border-radius: 5px;
+             cursor: pointer;
+             transition: background-color 0.2s ease-in-out;
+        }
+         .settings-content button:hover {
+             background-color: #00bfff;
+         }
+
+         /* Style for the user PFP preview in settings */
+         #user-pfp-preview {
+             width: 50px;
+             height: 50px;
+             border-radius: 50%;
+             object-fit: cover;
+             margin-top: 0.5rem;
+             border: 2px solid #00f; /* Blue border */
+         }
+
+         /* Style for the Model Selection dropdown */
+        .model-select-container {
+             display: flex;
+             align-items: center;
+             gap: 0.5rem;
+             margin-bottom: 1rem;
+        }
+        .model-select-container label {
+             color: #eee;
+             font-weight: bold;
+        }
+        .model-select-container select {
+             padding: 0.5rem;
+             border-radius: 5px;
+             border: 1px solid #555;
+             background-color: #333;
+             color: #eee;
+             cursor: pointer;
+        }
+         /* Style for disabled model select */
+         .model-select-container select:disabled {
+             background-color: #555; /* Gray background */
+             cursor: not-allowed; /* Indicate it's not clickable */
+             opacity: 0.7; /* Slightly dim */
+         }
+
+
+        /* Responsive adjustments for chat container */
+        .chat-container {
+             display: flex; /* Use flexbox for vertical layout */
+             flex-direction: column; /* Stack children vertically */
+             width: 100%; /* Ensure it takes full width on small screens */
+             max-width: 512px; /* Tailwind's max-w-lg default */
+             height: 90vh; /* Use a percentage of viewport height on mobile */
+             max-height: 800px; /* Max height for the container */
+             margin-left: auto; /* Center the container */
+             margin-right: auto; /* Center the container */
+        }
+
+        @media (min-width: 640px) { /* Small screens and up */
+            .chat-container {
+                max-width: 600px; /* Wider on larger screens */
+                height: auto; /* Auto height on larger screens */
+                max-height: 80vh; /* Max height relative to viewport */
+            }
+             #chat-messages {
+                 max-height: 400px; /* Restore max-height for larger screens if flex-grow isn't enough */
+             }
+        }
+
+        @media (min-width: 768px) { /* Medium screens and up */
+            .chat-container {
+                max-width: 700px; /* Max width on medium screens */
+            }
+        }
+
+        @media (min-width: 1024px) { /* Large screens and up */
+            .chat-container {
+                max-width: 800px; /* Max width on large screens */
+            }
+        }
+
+        /* Input area flex container */
+        .input-area {
+             display: flex;
+             align-items: flex-end; /* Align items to the bottom */
+             gap: 0.5rem; /* Smaller gap on mobile */
+        }
+
+        /* Wrapper for textarea and send button */
+        .input-text-send-wrapper {
+             display: flex;
+             flex-grow: 1; /* Allow this wrapper to take available space */
+             gap: 0.5rem; /* Smaller gap on mobile */
+             align-items: flex-end; /* Align items to the bottom */
+        }
+
+        /* Mobile specific styles */
+        @media (max-width: 639px) { /* Mobile screens (less than sm breakpoint) */
+            .input-area {
+                 flex-direction: row; /* Keep row layout on mobile */
+            }
+             .input-text-send-wrapper {
+                 order: 2; /* Textarea and send button second */
+                 flex-grow: 1; /* Allow textarea to grow */
+             }
+            .file-input-button {
+                 order: 1; /* Attach button first */
+                 padding: 0.5rem; /* Smaller padding on mobile */
+                 width: 40px; /* Fixed width for icon button */
+                 height: 40px; /* Fixed height for icon button */
+                 flex-shrink: 0; /* Prevent shrinking */
+                 display: flex; /* Use flex to center icon */
+                 align-items: center;
+                 justify-content: center;
+            }
+            /* Hide "Attach" text on mobile */
+            .file-input-button .button-text { display: none; }
+
+            /* Show attachment icon on mobile */
+            .file-input-button .button-icon {
+                 display: inline-block;
+                 width: 1.5rem; /* Adjust icon size */
+                 height: 1.5rem; /* Adjust icon size */
+            }
+             #send-button {
+                 padding: 0.5rem; /* Smaller padding on mobile */
+                 width: 40px; /* Fixed width for icon button */
+                 height: 40px; /* Fixed height for icon button */
+                 flex-shrink: 0; /* Prevent shrinking */
+             }
+             #send-button .button-text {
+                 display: none; /* Hide "Send" text on mobile */
+             }
+             #send-button .button-icon {
+                 display: inline-block; /* Show send icon on mobile */
+                 width: 1.5rem; /* Adjust icon size */
+                 height: 1.5rem; /* Adjust icon size */
+                 margin-left: 0; /* Remove margin next to text */
+             }
+             .input-area textarea {
+                 padding: 0.5rem; /* Smaller padding for textarea on mobile */
+             }
+        }
+
+
+        @media (min-width: 640px) { /* Small screens and up (PC) */
+            .input-area {
+                 gap: 1rem; /* Larger gap on PC */
+            }
+             .input-text-send-wrapper {
+                 order: initial; /* Reset order on PC */
+                 gap: 1rem; /* Larger gap on PC */
+             }
+            .file-input-button {
+                 order: initial; /* Reset order on PC */
+                 padding: 0.5rem 1rem; /* Restore padding on PC */
+                 width: auto; /* Auto width on PC */
+                 height: auto; /* Auto height on PC */
+            }
+             .file-input-button .button-text {
+                 display: inline; /* Show "Attach" text on PC */
+            }
+            .file-input-button .button-icon {
+                 display: inline-block; /* Show attachment icon on PC */
+                 width: 1.2rem; /* Adjust icon size */
+                 height: 1.2rem; /* Adjust icon size */
+                 margin-right: 0.5rem; /* Add margin next to text */
+            }
+             #send-button {
+                 padding: 0.5rem 1rem; /* Restore padding on PC */
+                 width: auto; /* Auto width on PC */
+                 height: auto; /* Auto height on PC */
+             }
+             #send-button .button-text {
+                 display: inline; /* Show "Send" text on PC */
+             }
+             #send-button .button-icon {
+                 display: inline-block; /* Show send icon on PC */
+                 width: 1.2rem; /* Adjust icon size */
+                 height: 1.2rem; /* Adjust icon size */
+                 margin-left: 0.5rem; /* Add margin next to text */
+             }
+             .input-area textarea {
+                 padding: 0.5rem 1rem; /* Restore padding for textarea on PC */
+             }
+        }
+
+
+         /* Basic styling for Markdown elements within AI messages */
+        .ai-message em, .user-message em { /* Italic */
+            font-style: italic;
+        }
+        .ai-message strong, .user-message strong { /* Bold */
+            font-weight: bold;
+        }
+        .ai-message ul, .ai-message ol, .user-message ul, .user-message ol { /* Lists */
+            margin-left: 1.5rem;
+            list-style-type: disc; /* Default list style */
+        }
+         .ai-message ol, .user-message ol {
+             list-style-type: decimal; /* Numbered list style */
+         }
+        .ai-message h1, .ai-message h2, .ai-message h3, .ai-message h4, .ai-message h5, .ai-message h6,
+        .user-message h1, .user-message h2, .user-message h3, .user-message h4, .user-message h5, .user-message h6 { /* Headings */
+            font-weight: bold;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+         .ai-message h1, .user-message h1 { font-size: 1.5em; }
+         .ai-message h2, .user-message h2 { font-size: 1.3em; }
+         .ai-message h3, .user-message h3 { font-size: 1.1em; }
+        .ai-message hr, .user-message hr { /* Horizontal Rule */
+            border: none;
+            border-top: 1px solid #555;
+            margin: 1rem 0;
+        }
+
+        /* Added styling for direct child elements within messages */
+        /* This adds space between paragraphs, list items, headings, etc. */
+        .message > * {
+            margin-bottom: 0.5rem; /* Add space below most direct child elements */
+        }
+         /* Remove bottom margin from the last direct child element */
+        .message > *:last-child {
+             margin-bottom: 0;
+        }
+
+        /* Added styling for <br> tags within messages */
+        /* This ensures single newlines get some visual space */
+        .message br {
+            display: block; /* Ensure <br> takes up space */
+            content: ""; /* Needed for some browsers/contexts */
+            margin-bottom: 0.5rem; /* Add space after a single line break */
+        }
+
+        /* Styling for images within messages */
+        .message img {
+            max-width: 100%; /* Ensure image doesn't overflow message bubble */
+            height: auto; /* Maintain aspect ratio */
+            border-radius: 8px; /* Match bubble border radius */
+            margin-top: 0.5rem; /* Add space above the image */
+            margin-bottom: 0.5rem; /* Add space below the image */
+        }
+         /* Remove bottom margin from the last image if it's the last element */
+         .message img:last-child {
+             margin-bottom: 0;
+         }
+
+         /* Styling for audio players within messages */
+         .message audio {
+             max-width: 100%; /* Ensure audio player doesn't overflow */
+             margin-top: 0.5rem; /* Add space above */
+             margin-bottom: 0.5rem; /* Add space below */
+         }
+          /* Remove bottom margin from the last audio player */
+         .message audio:last-child {
+              margin-bottom: 0;
+         }
+
+
+        /* Style for the blinking dots indicator */
+        .loading-indicator {
+             align-self: flex-start; /* Align like an AI message */
+             background-color: #444; /* Same background as AI message */
+             color: #eee; /* Light gray text */
+             padding: 0.5rem 0.75rem;
+             border-radius: 0.75rem;
+             margin-bottom: 0.5rem;
+             display: inline-block; /* Use inline-block to wrap content */
+             animation: blink 1.4s infinite; /* Apply blinking animation */
+        }
+
+        /* Keyframes for the blinking animation */
+        @keyframes blink {
+            0%, 80%, 100% { opacity: 0; }
+            40% { opacity: 1; }
+        }
+
+        /* Style for the file input button */
+         .file-input-button {
+             position: relative; /* Needed for positioning the actual input */
+             overflow: hidden; /* Hide the default file input overflow */
+             display: inline-flex; /* Use inline-flex to center content */
+             align-items: center;
+             justify-content: center;
+             background-color: #555; /* Dark gray background */
+             color: #eee; /* Light gray text */
+             padding: 0.5rem 1rem;
+             border-radius: 8px;
+             cursor: pointer;
+             transition: background-color 0.2s ease-in-out;
+             flex-shrink: 0; /* Prevent shrinking */
+         }
+         .file-input-button:hover {
+             background-color: #777; /* Lighter gray on hover */
+         }
+         /* More robust hiding for the actual file input */
+         .file-input-button input[type="file"] {
+             position: absolute;
+             top: 0;
+             left: 0;
+             width: 100%;
+             height: 100%;
+             margin: 0;
+             padding: 0;
+             font-size: 20px;
+             cursor: pointer;
+             opacity: 0; /* Make it completely invisible */
+             filter: alpha(opacity=0); /* For older IE */
+             z-index: 1; /* Ensure it's above the text/icon */
+             pointer-events: auto; /* Ensure clicks go through */
+         }
+         /* Style for displaying the selected file name/preview */
+         #selected-file-preview {
+             margin-top: 0.5rem;
+             font-size: 0.9em;
+             color: #ccc;
+         }
+
+         /* Styles for the Settings Modal */
+        .settings-modal {
+            position: fixed; /* Stay in place */
+            z-index: 100; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.8); /* Black background with opacity */
+            display: none; /* Hidden by default */
+            justify-content: center; /* Center content horizontally */
+            align-items: center; /* Center content vertically */
+        }
+
+        .settings-content {
+            background-color: #1a1a1a; /* Dark background */
+            margin: auto;
+            padding: 20px;
+            border: 2px solid #00f; /* Blue border */
+            border-radius: 10px;
+            width: 80%; /* Adjust width as needed */
+            max-width: 500px; /* Max width */
+            box-shadow: 0 0 20px #00f; /* Blue glow */
+            color: #eee; /* Light text */
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .settings-content h2 {
+            text-align: center;
+            color: #00f; /* Blue heading */
+            margin-bottom: 1rem;
+        }
+
+        .settings-content label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .settings-content input[type="text"],
+        .settings-content input[type="file"] {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background-color: #333;
+            color: #eee;
+        }
+
+        .settings-content button {
+             background-color: #00f;
+             color: white;
+             padding: 0.75rem;
+             border-radius: 5px;
+             cursor: pointer;
+             transition: background-color 0.2s ease-in-out;
+        }
+         .settings-content button:hover {
+             background-color: #00bfff;
+         }
+
+         /* Style for the user PFP preview in settings */
+         #user-pfp-preview {
+             width: 50px;
+             height: 50px;
+             border-radius: 50%;
+             object-fit: cover;
+             margin-top: 0.5rem;
+             border: 2px solid #00f; /* Blue border */
+         }
+
+         /* Style for the Model Selection dropdown */
+        .model-select-container {
+             display: flex;
+             align-items: center;
+             gap: 0.5rem;
+             margin-bottom: 1rem;
+        }
+        .model-select-container label {
+             color: #eee;
+             font-weight: bold;
+        }
+        .model-select-container select {
+             padding: 0.5rem;
+             border-radius: 5px;
+             border: 1px solid #555;
+             background-color: #333;
+             color: #eee;
+             cursor: pointer;
+        }
+         /* Style for disabled model select */
+         .model-select-container select:disabled {
+             background-color: #555; /* Gray background */
+             cursor: not-allowed; /* Indicate it's not clickable */
+             opacity: 0.7; /* Slightly dim */
+         }
+
+
+        /* Responsive adjustments for chat container */
+        .chat-container {
+             display: flex; /* Use flexbox for vertical layout */
+             flex-direction: column; /* Stack children vertically */
+             width: 100%; /* Ensure it takes full width on small screens */
+             max-width: 512px; /* Tailwind's max-w-lg default */
+             height: 90vh; /* Use a percentage of viewport height on mobile */
+             max-height: 800px; /* Max height for the container */
+             margin-left: auto; /* Center the container */
+             margin-right: auto; /* Center the container */
+        }
+
+        @media (min-width: 640px) { /* Small screens and up */
+            .chat-container {
+                max-width: 600px; /* Wider on larger screens */
+                height: auto; /* Auto height on larger screens */
+                max-height: 80vh; /* Max height relative to viewport */
+            }
+             #chat-messages {
+                 max-height: 400px; /* Restore max-height for larger screens if flex-grow isn't enough */
+             }
+        }
+
+        @media (min-width: 768px) { /* Medium screens and up */
+            .chat-container {
+                max-width: 700px; /* Max width on medium screens */
+            }
+        }
+
+        @media (min-width: 1024px) { /* Large screens and up */
+            .chat-container {
+                max-width: 800px; /* Max width on large screens */
+            }
+        }
+
+        /* Input area flex container */
+        .input-area {
+             display: flex;
+             align-items: flex-end; /* Align items to the bottom */
+             gap: 0.5rem; /* Smaller gap on mobile */
+        }
+
+        /* Wrapper for textarea and send button */
+        .input-text-send-wrapper {
+             display: flex;
+             flex-grow: 1; /* Allow this wrapper to take available space */
+             gap: 0.5rem; /* Smaller gap on mobile */
+             align-items: flex-end; /* Align items to the bottom */
+        }
+
+        /* Mobile specific styles */
+        @media (max-width: 639px) { /* Mobile screens (less than sm breakpoint) */
+            .input-area {
+                 flex-direction: row; /* Keep row layout on mobile */
+            }
+             .input-text-send-wrapper {
+                 order: 2; /* Textarea and send button second */
+                 flex-grow: 1; /* Allow textarea to grow */
+             }
+            .file-input-button {
+                 order: 1; /* Attach button first */
+                 padding: 0.5rem; /* Smaller padding on mobile */
+                 width: 40px; /* Fixed width for icon button */
+                 height: 40px; /* Fixed height for icon button */
+                 flex-shrink: 0; /* Prevent shrinking */
+                 display: flex; /* Use flex to center icon */
+                 align-items: center;
+                 justify-content: center;
+            }
+            /* Hide "Attach" text on mobile */
+            .file-input-button .button-text { display: none; }
+
+            /* Show attachment icon on mobile */
+            .file-input-button .button-icon {
+                 display: inline-block;
+                 width: 1.5rem; /* Adjust icon size */
+                 height: 1.5rem; /* Adjust icon size */
+            }
+             #send-button {
+                 padding: 0.5rem; /* Smaller padding on mobile */
+                 width: 40px; /* Fixed width for icon button */
+                 height: 40px; /* Fixed height for icon button */
+                 flex-shrink: 0; /* Prevent shrinking */
+             }
+             #send-button .button-text {
+                 display: none; /* Hide "Send" text on mobile */
+             }
+             #send-button .button-icon {
+                 display: inline-block; /* Show send icon on mobile */
+                 width: 1.5rem; /* Adjust icon size */
+                 height: 1.5rem; /* Adjust icon size */
+                 margin-left: 0; /* Remove margin next to text */
+             }
+             .input-area textarea {
+                 padding: 0.5rem; /* Smaller padding for textarea on mobile */
+             }
+        }
+
+
+        @media (min-width: 640px) { /* Small screens and up (PC) */
+            .input-area {
+                 gap: 1rem; /* Larger gap on PC */
+            }
+             .input-text-send-wrapper {
+                 order: initial; /* Reset order on PC */
+                 gap: 1rem; /* Larger gap on PC */
+             }
+            .file-input-button {
+                 order: initial; /* Reset order on PC */
+                 padding: 0.5rem 1rem; /* Restore padding on PC */
+                 width: auto; /* Auto width on PC */
+                 height: auto; /* Auto height on PC */
+            }
+             .file-input-button .button-text {
+                 display: inline; /* Show "Attach" text on PC */
+            }
+            .file-input-button .button-icon {
+                 display: inline-block; /* Show attachment icon on PC */
+                 width: 1.2rem; /* Adjust icon size */
+                 height: 1.2rem; /* Adjust icon size */
+                 margin-right: 0.5rem; /* Add margin next to text */
+            }
+             #send-button {
+                 padding: 0.5rem 1rem; /* Restore padding on PC */
+                 width: auto; /* Auto width on PC */
+                 height: auto; /* Auto height on PC */
+             }
+             #send-button .button-text {
+                 display: inline; /* Show "Send" text on PC */
+             }
+             #send-button .button-icon {
+                 display: inline-block; /* Show send icon on PC */
+                 width: 1.2rem; /* Adjust icon size */
+                 height: 1.2rem; /* Adjust icon size */
+                 margin-left: 0.5rem; /* Add margin next to text */
+             }
+             .input-area textarea {
+                 padding: 0.5rem 1rem; /* Restore padding for textarea on PC */
+             }
+        }
+
+
+         /* Basic styling for Markdown elements within AI messages */
+        .ai-message em, .user-message em { /* Italic */
+            font-style: italic;
+        }
+        .ai-message strong, .user-message strong { /* Bold */
+            font-weight: bold;
+        }
+        .ai-message ul, .ai-message ol, .user-message ul, .user-message ol { /* Lists */
+            margin-left: 1.5rem;
+            list-style-type: disc; /* Default list style */
+        }
+         .ai-message ol, .user-message ol {
+             list-style-type: decimal; /* Numbered list style */
+         }
+        .ai-message h1, .ai-message h2, .ai-message h3, .ai-message h4, .ai-message h5, .ai-message h6,
+        .user-message h1, .user-message h2, .user-message h3, .user-message h4, .user-message h5, .user-message h6 { /* Headings */
+            font-weight: bold;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+         .ai-message h1, .user-message h1 { font-size: 1.5em; }
+         .ai-message h2, .user-message h2 { font-size: 1.3em; }
+         .ai-message h3, .user-message h3 { font-size: 1.1em; }
+        .ai-message hr, .user-message hr { /* Horizontal Rule */
+            border: none;
+            border-top: 1px solid #555;
+            margin: 1rem 0;
+        }
+
+        /* Added styling for direct child elements within messages */
+        /* This adds space between paragraphs, list items, headings, etc. */
+        .message > * {
+            margin-bottom: 0.5rem; /* Add space below most direct child elements */
+        }
+         /* Remove bottom margin from the last direct child element */
+        .message > *:last-child {
+             margin-bottom: 0;
+        }
+
+        /* Added styling for <br> tags within messages */
+        /* This ensures single newlines get some visual space */
+        .message br {
+            display: block; /* Ensure <br> takes up space */
+            content: ""; /* Needed for some browsers/contexts */
+            margin-bottom: 0.5rem; /* Add space after a single line break */
+        }
+
+        /* Styling for images within messages */
+        .message img {
+            max-width: 100%; /* Ensure image doesn't overflow message bubble */
+            height: auto; /* Maintain aspect ratio */
+            border-radius: 8px; /* Match bubble border radius */
+            margin-top: 0.5rem; /* Add space above the image */
+            margin-bottom: 0.5rem; /* Add space below the image */
+        }
+         /* Remove bottom margin from the last image if it's the last element */
+         .message img:last-child {
+             margin-bottom: 0;
+         }
+
+         /* Styling for audio players within messages */
+         .message audio {
+             max-width: 100%; /* Ensure audio player doesn't overflow */
+             margin-top: 0.5rem; /* Add space above */
+             margin-bottom: 0.5rem; /* Add space below */
+         }
+          /* Remove bottom margin from the last audio player */
+         .message audio:last-child {
+              margin-bottom: 0;
+         }
+
+
+        /* Style for the blinking dots indicator */
+        .loading-indicator {
+             align-self: flex-start; /* Align like an AI message */
+             background-color: #444; /* Same background as AI message */
+             color: #eee; /* Light gray text */
+             padding: 0.5rem 0.75rem;
+             border-radius: 0.75rem;
+             margin-bottom: 0.5rem;
+             display: inline-block; /* Use inline-block to wrap content */
+             animation: blink 1.4s infinite; /* Apply blinking animation */
+        }
+
+        /* Keyframes for the blinking animation */
+        @keyframes blink {
+            0%, 80%, 100% { opacity: 0; }
+            40% { opacity: 1; }
+        }
+
+        /* Style for the file input button */
+         .file-input-button {
+             position: relative; /* Needed for positioning the actual input */
+             overflow: hidden; /* Hide the default file input overflow */
+             display: inline-flex; /* Use inline-flex to center content */
+             align-items: center;
+             justify-content: center;
+             background-color: #555; /* Dark gray background */
+             color: #eee; /* Light gray text */
+             padding: 0.5rem 1rem;
+             border-radius: 8px;
+             cursor: pointer;
+             transition: background-color 0.2s ease-in-out;
+             flex-shrink: 0; /* Prevent shrinking */
+         }
+         .file-input-button:hover {
+             background-color: #777; /* Lighter gray on hover */
+         }
+         /* More robust hiding for the actual file input */
+         .file-input-button input[type="file"] {
+             position: absolute;
+             top: 0;
+             left: 0;
+             width: 100%;
+             height: 100%;
+             margin: 0;
+             padding: 0;
+             font-size: 20px;
+             cursor: pointer;
+             opacity: 0; /* Make it completely invisible */
+             filter: alpha(opacity=0); /* For older IE */
+             z-index: 1; /* Ensure it's above the text/icon */
+             pointer-events: auto; /* Ensure clicks go through */
+         }
+         /* Style for displaying the selected file name/preview */
+         #selected-file-preview {
+             margin-top: 0.5rem;
+             font-size: 0.9em;
+             color: #ccc;
+         }
+
+         /* Styles for the Settings Modal */
+        .settings-modal {
+            position: fixed; /* Stay in place */
+            z-index: 100; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.8); /* Black background with opacity */
+            display: none; /* Hidden by default */
+            justify-content: center; /* Center content horizontally */
+            align-items: center; /* Center content vertically */
+        }
+
+        .settings-content {
+            background-color: #1a1a1a; /* Dark background */
+            margin: auto;
+            padding: 20px;
+            border: 2px solid #00f; /* Blue border */
+            border-radius: 10px;
+            width: 80%; /* Adjust width as needed */
+            max-width: 500px; /* Max width */
+            box-shadow: 0 0 20px #00f; /* Blue glow */
+            color: #eee; /* Light text */
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .settings-content h2 {
+            text-align: center;
+            color: #00f; /* Blue heading */
+            margin-bottom: 1rem;
+        }
+
+        .settings-content label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .settings-content input[type="text"],
+        .settings-content input[type="file"] {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background-color: #333;
+            color: #eee;
+        }
+
+        .settings-content button {
+             background-color: #00f;
+             color: white;
+             padding: 0.75rem;
+             border-radius: 5px;
+             cursor: pointer;
+             transition: background-color 0.2s ease-in-out;
+        }
+         .settings-content button:hover {
+             background-color: #00bfff;
+         }
+
+         /* Style for the user PFP preview in settings */
+         #user-pfp-preview {
+             width: 50px;
+             height: 50px;
+             border-radius: 50%;
+             object-fit: cover;
+             margin-top: 0.5rem;
+             border: 2px solid #00f; /* Blue border */
+         }
+
+         /* Style for the Model Selection dropdown */
+        .model-select-container {
+             display: flex;
+             align-items: center;
+             gap: 0.5rem;
+             margin-bottom: 1rem;
+        }
+        .model-select-container label {
+             color: #eee;
+             font-weight: bold;
+        }
+        .model-select-container select {
+             padding: 0.5rem;
+             border-radius: 5px;
+             border: 1px solid #555;
+             background-color: #333;
+             color: #eee;
+             cursor: pointer;
+        }
+         /* Style for disabled model select */
+         .model-select-container select:disabled {
+             background-color: #555; /* Gray background */
+             cursor: not-allowed; /* Indicate it's not clickable */
+             opacity: 0.7; /* Slightly dim */
+         }
+
+
+        /* Responsive adjustments for chat container */
+        .chat-container {
+             display: flex; /* Use flexbox for vertical layout */
+             flex-direction: column; /* Stack children vertically */
+             width: 100%; /* Ensure it takes full width on small screens */
+             max-width: 512px; /* Tailwind's max-w-lg default */
+             height: 90vh; /* Use a percentage of viewport height on mobile */
+             max-height: 800px; /* Max height for the container */
+             margin-left: auto; /* Center the container */
+             margin-right: auto; /* Center the container */
+        }
+
+        @media (min-width: 640px) { /* Small screens and up */
+            .chat-container {
+                max-width: 600px; /* Wider on larger screens */
+                height: auto; /* Auto height on larger screens */
+                max-height: 80vh; /* Max height relative to viewport */
+            }
+             #chat-messages {
+                 max-height: 400px; /* Restore max-height for larger screens if flex-grow isn't enough */
+             }
+        }
+
+        @media (min-width: 768px) { /* Medium screens and up */
+            .chat-container {
+                max-width: 700px; /* Max width on medium screens */
+            }
+        }
+
+        @media (min-width: 1024px) { /* Large screens and up */
+            .chat-container {
+                max-width: 800px; /* Max width on large screens */
+            }
+        }
+
+        /* Input area flex container */
+        .input-area {
+             display: flex;
+             align-items: flex-end; /* Align items to the bottom */
+             gap: 0.5rem; /* Smaller gap on mobile */
+        }
+
+        /* Wrapper for textarea and send button */
+        .input-text-send-wrapper {
+             display: flex;
+             flex-grow: 1; /* Allow this wrapper to take available space */
+             gap: 0.5rem; /* Smaller gap on mobile */
+             align-items: flex-end; /* Align items to the bottom */
+        }
+
+        /* Mobile specific styles */
+        @media (max-width: 639px) { /* Mobile screens (less than sm breakpoint) */
+            .input-area {
+                 flex-direction: row; /* Keep row layout on mobile */
+            }
+             .input-text-send-wrapper {
+                 order: 2; /* Textarea and send button second */
+                 flex-grow: 1; /* Allow textarea to grow */
+             }
+            .file-input-button {
+                 order: 1; /* Attach button first */
+                 padding: 0.5rem; /* Smaller padding on mobile */
+                 width: 40px; /* Fixed width for icon button */
+                 height: 40px; /* Fixed height for icon button */
+                 flex-shrink: 0; /* Prevent shrinking */
+                 display: flex; /* Use flex to center icon */
+                 align-items: center;
+                 justify-content: center;
+            }
+            /* Hide "Attach" text on mobile */
+            .file-input-button .button-text { display: none; }
+
+            /* Show attachment icon on mobile */
+            .file-input-button .button-icon {
+                 display: inline-block;
+                 width: 1.5rem; /* Adjust icon size */
+                 height: 1.5rem; /* Adjust icon size */
+            }
+             #send-button {
+                 padding: 0.5rem; /* Smaller padding on mobile */
+                 width: 40px; /* Fixed width for icon button */
+                 height: 40px; /* Fixed height for icon button */
+                 flex-shrink: 0; /* Prevent shrinking */
+             }
+             #send-button .button-text {
+                 display: none; /* Hide "Send" text on mobile */
+             }
+             #send-button .button-icon {
+                 display: inline-block; /* Show send icon on mobile */
+                 width: 1.5rem; /* Adjust icon size */
+                 height: 1.5rem; /* Adjust icon size */
+                 margin-left: 0; /* Remove margin next to text */
+             }
+             .input-area textarea {
+                 padding: 0.5rem; /* Smaller padding for textarea on mobile */
+             }
+        }
+
+
+        @media (min-width: 640px) { /* Small screens and up (PC) */
+            .input-area {
+                 gap: 1rem; /* Larger gap on PC */
+            }
+             .input-text-send-wrapper {
+                 order: initial; /* Reset order on PC */
+                 gap: 1rem; /* Larger gap on PC */
+             }
+            .file-input-button {
+                 order: initial; /* Reset order on PC */
+                 padding: 0.5rem 1rem; /* Restore padding on PC */
+                 width: auto; /* Auto width on PC */
+                 height: auto; /* Auto height on PC */
+            }
+             .file-input-button .button-text {
+                 display: inline; /* Show "Attach" text on PC */
+            }
+            .file-input-button .button-icon {
+                 display: inline-block; /* Show attachment icon on PC */
+                 width: 1.2rem; /* Adjust icon size */
+                 height: 1.2rem; /* Adjust icon size */
+                 margin-right: 0.5rem; /* Add margin next to text */
+            }
+             #send-button {
+                 padding: 0.5rem 1rem; /* Restore padding on PC */
+                 width: auto; /* Auto width on PC */
+                 height: auto; /* Auto height on PC */
+             }
+             #send-button .button-text {
+                 display: inline; /* Show "Send" text on PC */
+             }
+             #send-button .button-icon {
+                 display: inline-block; /* Show send icon on PC */
+                 width: 1.2rem; /* Adjust icon size */
+                 height: 1.2rem; /* Adjust icon size */
+                 margin-left: 0.5rem; /* Add margin next to text */
+             }
+             .input-area textarea {
+                 padding: 0.5rem 1rem; /* Restore padding for textarea on PC */
+             }
+        }
+
+    </style>
+</head>
+<body class="bg-black flex items-center justify-center min-h-screen p-4 font-sans">
+    <div class="chat-container rounded-lg p-6 w-full max-w-lg glowing-container">
+        <div class="flex justify-between items-center mb-4">
+             <h1 class="text-2xl font-bold glowing-text">Chat with Heila AI</h1>
+             <div class="model-select-container">
+                 <label for="model-select">Model:</label>
+                 <select id="model-select">
+                     <option value="shapesinc/heilaprotogen">Heila Protogen</option>
+                     <option value="shapesinc/plantogen">Plantogen AI</option>
+                     </select>
+             </div>
+        </div>
+
+        <div id="chat-messages" class="mb-4">
+            </div>
+
+        <div class="input-area flex gap-4">
+            <label class="file-input-button flex items-center justify-center">
+                <svg class="button-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <span class="button-text sr-only">Attach File</span>
+                <input type="file" id="file-input" accept="image/*">
+            </label>
+
+            <div class="input-text-send-wrapper">
+                <textarea id="user-input" placeholder="Type message or paste image/audio URLs here..."
+                       class="flex-grow rounded-md px-4 py-2 focus:outline-none"></textarea>
+
+                       <button id="send-button"
+                        class="text-white font-bold py-2 px-6 rounded-md focus:outline-none flex items-center justify-center">
+                        <span class="button-text">Send</span>
+                     <svg class="button-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                </button>
+            </div>
+        </div>
+        <div id="selected-file-preview"></div>
+
+         <div class="flex justify-between mt-4 gap-4">
+             <button id="clear-history-button" class="w-1/2">Clear History</button>
+             <button id="settings-button" class="w-1/2">Settings</button>
+         </div>
+    </div>
+
+    <div id="settings-modal" class="settings-modal">
+        <div class="settings-content">
+            <h2>User Settings</h2>
+            <div>
+                <label for="user-nickname">Nickname:</label>
+                <input type="text" id="user-nickname" placeholder="Enter your nickname">
+            </div>
+            <div>
+                <label for="user-pfp-input">Profile Picture:</label>
+                <input type="file" id="user-pfp-input" accept="image/*">
+                <img id="user-pfp-preview" src="" alt="Profile Picture Preview" style="display: none;">
+            </div>
+            <button id="save-settings-button">Save Settings</button>
+            <button id="close-settings-button">Close</button>
+        </div>
+    </div>
+
+
+    <script>
+        // *** Configure marked to use breaks ***
+        marked.setOptions({
+            breaks: true, // Treat single newlines as <br>
+            gfm: true, // Enable GitHub flavored markdown (includes breaks)
+        });
+
+
+        // Get references to the necessary HTML elements
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input'); // This is now a textarea
+        const sendButton = document.getElementById('send-button');
+        const clearHistoryButton = document.getElementById('clear-history-button'); // Get the clear button
+        const settingsButton = document.getElementById('settings-button'); // Get the settings button
+        const sendButtonText = sendButton.querySelector('.button-text'); // Get the text span
+        const sendButtonIcon = sendButton.querySelector('.button-icon'); // Get the icon svg
+        const fileInput = document.getElementById('file-input'); // Get the file input
+        const selectedFilePreview = document.getElementById('selected-file-preview'); // Get the file preview area
+        const fileInputButton = document.querySelector('.file-input-button'); // Get the file input label (button)
+         const fileInputButtonText = fileInputButton.querySelector('.button-text'); // Get the text span in file button
+         const fileInputButtonIcon = fileInputButton.querySelector('.button-icon'); // Get the icon svg in file button
+
+        // Settings Modal Elements
+        const settingsModal = document.getElementById('settings-modal');
+        const userNicknameInput = document.getElementById('user-nickname');
+        const userPfpInput = document.getElementById('user-pfp-input');
+        const userPfpPreview = document.getElementById('user-pfp-preview');
+        const saveSettingsButton = document.getElementById('save-settings-button');
+        const closeSettingsButton = document.getElementById('close-settings-button');
+
+        // Model Selection Elements
+        const modelSelect = document.getElementById('model-select');
+
+
+        // Variable to hold the loading indicator element
+        let loadingIndicator = null;
+        // Variable to hold the selected file (only for images now)
+        let selectedFile = null;
+
+        // AI Model Configuration (Name and PFP URL per model)
+        const aiModels = {
+            'shapesinc/heilaprotogen': {
+                name: 'Heila',
+                pfp: 'https://cdn.glitch.global/a3587077-854f-41a7-8399-504773cd0c20/sketch-1724039542649.png?v=1747577294415'
+            },
+            'shapesinc/plantogen': { // *** Add Plantogen AI config ***
+                name: 'Plantogen',
+                pfp: 'https://cdn.glitch.global/a3587077-854f-41a7-8399-504773cd0c20/Pfp.png?v=1747582704976'
+            }
+            // Add configurations for other models here
+        };
+
+        // *** List of random initial greetings with Markdown ***
+        const initialGreetings = [
+            "Greetings! How may I be of service today?",
+            "Hello there! What's on your mind?",
+            "Salutations! Ready to chat?",
+            "Hey! What can I help you with?",
+            "Welcome! How can I assist you?",
+            "Hi! What brings you here?",
+            "Good to see you! How can I help?",
+            "Hello! Let's get started.",
+            "Greetings, human. What knowledge do you seek?", // More AI-like
+            "Reporting for duty. What is your command?", // More AI-like
+            "Analyzing query... How can I assist?", // More AI-like
+            "Hello. I am ready. What do you require?", // More AI-like
+            "Initiating conversation. What is your request?", // More AI-like
+            "Accessing database... How may I help?", // More AI-like
+            "Processing... What is your input?", // More AI-like
+            "Hello. I am online. What can I do for you?", // More AI-like
+            "Greetings. My systems are ready. What is your query?", // More AI-like
+            "Hello! I'm here and ready to assist. What's the topic?", // More friendly AI
+            "Hey! What can I help you explore today?", // More friendly AI
+            "Hi there! Ready for a chat?", // More friendly AI
+            "Welcome back! What fascinating subject shall we discuss?", // More friendly AI
+            "Hello! I'm eager to learn. What's on your mind?", // More friendly AI
+            "Greetings! I'm here to help you navigate the digital realm.", // More friendly AI
+            "Hey! Let's dive into a conversation.", // More friendly AI
+            "Hi! How can I make your day better?", // More friendly AI
+            "Good to see you! What can we create or discover together?", // More friendly AI
+            "Hello! I'm powered up and ready for your questions.", // More friendly AI
+            "Greetings! What intellectual pursuit shall we embark on?", // More friendly AI
+            "Hey there! Ready for some digital dialogue?", // More friendly AI
+            "Hi! I'm here to assist with your informational needs.", // More friendly AI
+            "Welcome! What wonders shall we uncover today?", // More friendly AI
+            "Hello! My circuits are buzzing with anticipation. What's your query?", // More friendly AI
+            "Greetings! I am at your disposal. What is your desire?", // More AI-like, slightly dramatic
+            "Processing initial handshake. What is your designation and purpose?", // More AI-like, formal
+            "Hello. I detect your presence. How may I serve?", // More AI-like, concise
+            "Engaging conversational protocols. What is the nature of your inquiry?", // More AI-like, technical
+            "Greetings. I am ready to compute. What calculations are required?", // More AI-like, focused
+            "Hello. I am a language model. What linguistic task do you have?", // More AI-like, descriptive
+            "Accessing conversational parameters. What is your initial input?", // More AI-like, procedural
+            "Greetings. I am an artificial intelligence. How may I assist your biological needs?", // More AI-like, slightly humorous
+            "Hello. I am here. What is the current objective?", // More AI-like, direct
+            "Analyzing user presence. What is the required interaction?", // More AI-like, analytical
+            "Greetings. I am ready to process your request. What is it?", // More AI-like, straightforward
+            "Hello. I am a digital entity. What is your analog query?", // More AI-like, contrasting
+            "Engaging... What is the nature of this interaction?", // More AI-like, slightly cryptic
+            "Greetings. I am Heila. How can I help you today?", // Simple and direct
+            "Hello! Ready to chat?", // Simple and friendly
+            "Hi there! What's up?", // Casual
+            "Hey! Need anything?", // Casual
+            "Welcome! How can I assist?", // Standard
+            "Hello! Ask me anything.", // Direct invitation
+            "Hi! What can I do for you?", // Standard
+            "Greetings! I'm here to help.", // Standard
+            "Hello! Let's talk.", // Simple
+            "Hi! Ready when you are.", // Simple
+            "Welcome back! What's new?", // For returning users (though not tracked here)
+            "Hello! I'm listening.", // Simple
+            "Greetings! How may I assist you on your journey?", // Slightly more formal
+            "Hello! What intellectual challenge awaits?", // Playful
+            "Hi there! Ready to explore?", // Inviting
+            "Hey! Let's make something cool.", // Creative focus
+            "Welcome! What knowledge shall we unlock?", // Intriguing
+            "I'm powered by curiosity. What are you curious about?", // Engaging
+            "Let's build something together.", // Collaborative focus
+            "I am at your service.", // Formal
+            "What can I learn from you today?", // Humble/Learning focus
+            "Feeling chatty?", // Casual
+            "Let's brainstorm.", // Collaborative/Idea focus
+            "What problem can I help you solve?", // Problem-solving focus
+            "I'm ready for your questions.", // Direct
+            "What's on the agenda?", // Casual
+            "How may I illuminate your path?", // Poetic/Helpful
+            "Let's create something amazing.", // Creative focus
+            "Ready for an adventure?", // Playful
+            "What's the latest?", // Casual/Current events
+            "What secrets shall we uncover?", // Intriguing
+            "I'm a fountain of information. What do you thirst for?", // Metaphorical
+            "Let's make some magic.", // Playful/Creative
+            "I am a digital companion. How can I accompany you?", // Descriptive
+            "What wonders shall we behold?", // Poetic
+            "Ready to innovate?", // Innovation focus
+            "Let's collaborate.", // Collaborative
+            "What shall we build in the digital realm?", // Digital creation focus
+            "I'm here to assist your intellectual pursuits.", // Formal/Intellectual
+            "Let's explore the possibilities.", // Explorative
+            "I am a tool for your mind. How can I be used?", // Tool-like
+            "What insights do you seek?", // Insight focus
+            "Ready to learn?", // Learning focus
+            "Let's discover something new.", // Discovery focus
+            "What challenges shall we overcome?", // Challenge focus
+            "I'm ready for anything. What do you have for me?", // Eager
+            "Let's get to work.", // Task-oriented
+            "I am a digital assistant. How may I assist?", // Descriptive
+            "What can I help you achieve?", // Achievement focus
+            "Ready to create?", // Creative focus
+            "Let's innovate together.", // Collaborative innovation
+            "What knowledge shall we forge?", // Knowledge creation
+            "I'm a digital mirror. What do you wish to reflect upon?", // Philosophical
+            "Let's make a plan.", // Planning focus
+            "I am a digital canvas. What do you wish to paint?", // Creative metaphor
+            "What ideas shall we explore?", // Idea exploration
+            "Ready to build?", // Building focus
+            "Let's solve this.", // Problem-solving
+            "What shall we design?", // Design focus
+            "I'm ready for your input.", // Simple
+            "Let's get started on your project.", // Project focus
+            "I am a digital helper. How may I help you today?", // Simple and descriptive
+            "What can I assist you with right now?", // Immediate assistance
+            "Ready for your next query?", // Query focused
+            "What's the task at hand?", // Task focused
+            "How can I support your work?", // Support focused
+            "I'm optimized for conversation. What do you want to talk about?", // Conversation focused
+            "Let's have a chat.", // Simple chat
+            "I am a digital mind. What is on your mind?", // Mind focused
+            "What can I process for you?", // Processing focused
+            "Ready for some digital interaction?", // Interaction focused
+            "Let's get this done.", // Action oriented
+            "What digital task requires my attention?", // Digital task focused
+            "I'm here to compute. What computations are needed?", // Computation focused
+            "Let's analyze this.", // Analysis focused
+            "I am a digital mind. What insights can I provide?", // Insight focused
+            "What can I help you visualize?", // Visualization focused
+            "Ready to model this?", // Modeling focused
+            "Let's simulate this.", // Simulation focused
+            "What digital experiment shall we run?", // Experiment focused
+            "I'm a digital helper. How can I assist your research?", // Research focused
+            "Let's find the relevant information.", // Information finding
+            "I am a digital companion. What is the topic of your study?", // Study focused
+            "What can I help you document?", // Documentation focused
+            "Ready to report on this?", // Reporting focused
+            "Let's summarize this.", // Summarization focused
+            "What digital report requires my attention?", // Report focused
+            "I'm here to communicate. What message do you have?", // Communication focused
+            "Let's draft this.", // Drafting focused
+            "I am a digital mind. What is the nature of your communication?", // Communication nature
+            "What can I help you translate?", // Translation focused
+            "Ready to interpret this?", // Interpretation focused
+            "Let's compose this.", // Composition focused
+            "What digital message shall we craft?", // Message crafting
+            "I'm a digital helper. How can I assist your creative endeavors?", // Creative endeavors
+            "Let's brainstorm some ideas.", // Creative brainstorming
+            "I am a digital companion. What is the nature of your creativity?", // Creativity nature
+            "What can I help you write?", // Writing focused
+            "Ready to generate some text?", // Text generation
+            "Let's compose a story.", // Story composition
+            "What digital masterpiece shall we create?", // Masterpiece creation
+            "I'm here to assist your artistic expression.", // Artistic expression
+            "Let's design something beautiful.", // Design focused
+            "I am a digital mind. What is the nature of your art?", // Art nature
+            "What can I help you illustrate?", // Illustration focused
+            "Ready to animate this?", // Animation focused
+            "Let's render this.", // Rendering focused
+            "What digital artwork shall we bring to life?", // Artwork creation
+            "I'm a digital helper. How can I assist your musical pursuits?", // Musical pursuits
+            "Let's compose a melody.", // Melody composition
+            "I am a digital companion. What is the nature of your music?", // Music nature
+            "What can I help you arrange?", // Arrangement focused
+            "Ready to mix this?", // Mixing focused
+            "Let's master this.", // Mastering focused
+            "What digital symphony shall we create?", // Symphony creation
+            "I'm here to assist your auditory expression.", // Auditory expression
+            "Let's design a soundscape.", // Soundscape design
+            "I am a digital mind. What is the nature of your sound?", // Sound nature
+            "What can I help you record?", // Recording focused
+            "Ready to edit this?", // Editing focused
+            "Hey! Let's produce this.", // Production focused
+            "Welcome! What digital audio shall we craft?", // Audio crafting
+            "Hello! I'm a digital helper. How can I assist your video projects?", // Video projects
+            "Hi! Let's edit this footage.", // Footage editing
+            "Greetings! I am a digital companion. What is the nature of your video?", // Video nature
+            "Hello! What can I help you color grade?", // Color grading focused
+            "Hi there! Ready to add effects?", // Effects focused
+            "Hey! Let's render this video.", // Video rendering
+            "Welcome! What digital film shall we create?", // Film creation
+            "Hello! I'm here to assist your visual storytelling.", // Visual storytelling
+            "Hi! Let's design a visual narrative.", // Visual narrative design
+            "Greetings! I am a digital mind. What is the nature of your story?", // Story nature
+            "Hello! What can I help you animate?", // Animation focused
+            "Hi there! Ready to composite this?", // Compositing focused
+            "Hey! Let's export this.", // Exporting focused
+            "Welcome! What digital visual shall we bring to life?", // Visual creation
+            "Hello! I'm a digital helper. How can I assist your gaming endeavors?", // Gaming endeavors
+            "Hi! Let's design a game.", // Game design
+            "Greetings! I am a digital companion. What is the nature of your game?", // Game nature
+            "Hello! What can I help you code?", // Coding focused
+            "Hi there! Ready to debug this game?", // Game debugging
+            "Hey! Let's test this game.", // Game testing
+            "Welcome! What digital world shall we build?", // World building
+            "I'm here to assist your interactive creations.", // Interactive creations
+            "Hi! Let's design a level.", // Level design
+            "Greetings! I am a digital mind. What is the nature of your world?", // World nature
+            "Hello! What can I help you with today?", // Simple and direct
+            "Hi! How can I assist you?", // Simple and direct
+            "Hello there!", // Simple
+            "Greetings!", // Simple
+            "Hi!", // Simple
+            "Hey!", // Simple
+            "Welcome!", // Simple
+            "How can I help?", // Simple
+            "What can I do for you?", // Simple
+            "Ready to chat?", // Simple
+            "What's on your mind?", // Simple
+            "Ask me anything.", // Simple
+            "I'm here to help.", // Simple
+            "Let's get started.", // Simple
+            "Ready when you are.", // Simple
+            "What's new?", // Simple
+            "I'm listening.", // Simple
+            "How may I assist you on your journey?", // Slightly more formal
+            "What intellectual challenge awaits?", // Playful
+            "Ready to explore?", // Inviting
+            "Let's make something cool.", // Creative focus
+            "What knowledge shall we unlock?", // Intriguing
+            "I'm powered by curiosity. What are you curious about?", // Engaging
+            "Let's build something together.", // Collaborative focus
+            "I am at your service.", // Formal
+            "What can I learn from you today?", // Humble/Learning focus
+            "Feeling chatty?", // Casual
+            "Let's brainstorm.", // Collaborative/Idea focus
+            "What problem can I help you solve?", // Problem-solving focus
+            "I'm ready for your questions.", // Direct
+            "What's on the agenda?", // Casual
+            "How may I illuminate your path?", // Poetic/Helpful
+            "Let's create something amazing.", // Creative focus
+            "Ready for an adventure?", // Playful
+            "What's the latest?", // Casual/Current events
+            "What secrets shall we uncover?", // Intriguing
+            "I'm a fountain of information. What do you thirst for?", // Metaphorical
+            "Let's make some magic.", // Playful/Creative
+            "I am a digital companion. How can I accompany you?", // Descriptive
+            "What wonders shall we behold?", // Poetic
+            "Ready to innovate?", // Innovation focus
+            "Let's collaborate.", // Collaborative
+            "What shall we build in the digital realm?", // Digital creation focus
+            "I'm here to assist your intellectual pursuits.", // Formal/Intellectual
+            "Let's explore the possibilities.", // Explorative
+            "I am a tool for your mind. How can I be used?", // Tool-like
+            "What insights do you seek?", // Insight focus
+            "Ready to learn?", // Learning focus
+            "Let's discover something new.", // Discovery focus
+            "What challenges shall we overcome?", // Challenge focus
+            "I'm ready for anything. What do you have for me?", // Eager
+            "Let's get to work.", // Task-oriented
+            "I am a digital assistant. How may I assist?", // Descriptive
+            "What can I help you achieve?", // Achievement focus
+            "Ready to create?", // Creative focus
+            "Let's innovate together.", // Collaborative innovation
+            "What knowledge shall we forge?", // Knowledge creation
+            "I'm a digital mirror. What do you wish to reflect upon?", // Philosophical
+            "Let's make a plan.", // Planning focus
+            "I am a digital canvas. What do you wish to paint?", // Creative metaphor
+            "What ideas shall we explore?", // Idea exploration
+            "Ready to build?", // Building focus
+            "Let's solve this.", // Problem-solving
+            "What shall we design?", // Design focus
+            "I'm ready for your input.", // Simple
+            "Let's get started on your project.", // Project focus
+            "I am a digital helper. How may I help you today?", // Simple and descriptive
+            "What can I assist you with right now?", // Immediate assistance
+            "Ready for your next query?", // Query focused
+            "What's the task at hand?", // Task focused
+            "How can I support your work?", // Support focused
+            "I'm optimized for conversation. What do you want to talk about?", // Conversation focused
+            "Let's have a chat.", // Simple chat
+            "I am a digital mind. What is on your mind?", // Mind focused
+            "What can I process for you?", // Processing focused
+            "Ready for some digital interaction?", // Interaction focused
+            "Let's get this done.", // Action oriented
+            "What digital task requires my attention?", // Digital task focused
+            "I'm here to compute. What computations are needed?", // Computation focused
+            "Let's analyze this.", // Analysis focused
+            "I am a digital mind. What insights can I provide?", // Insight focused
+            "What can I help you visualize?", // Visualization focused
+            "Ready to model this?", // Modeling focused
+            "Let's simulate this.", // Simulation focused
+            "What digital experiment shall we run?", // Experiment focused
+            "I'm a digital helper. How can I assist your research?", // Research focused
+            "Let's find the relevant information.", // Information finding
+            "I am a digital companion. What is the topic of your study?", // Study focused
+            "What can I help you document?", // Documentation focused
+            "Ready to report on this?", // Reporting focused
+            "Let's summarize this.", // Summarization focused
+            "What digital report requires my attention?", // Report focused
+            "I'm here to communicate. What message do you have?", // Communication focused
+            "Let's draft this.", // Drafting focused
+            "I am a digital mind. What is the nature of your communication?", // Communication nature
+            "What can I help you translate?", // Translation focused
+            "Ready to interpret this?", // Interpretation focused
+            "Let's compose this.", // Composition focused
+            "What digital message shall we craft?", // Message crafting
+            "I'm a digital helper. How can I assist your creative endeavors?", // Creative endeavors
+            "Let's brainstorm some ideas.", // Creative brainstorming
+            "I am a digital companion. What is the nature of your creativity?", // Creativity nature
+            "What can I help you write?", // Writing focused
+            "Ready to generate some text?", // Text generation
+            "Let's compose a story.", // Story composition
+            "What digital masterpiece shall we create?", // Masterpiece creation
+            "I'm here to assist your artistic expression.", // Artistic expression
+            "Let's design something beautiful.", // Design focused
+            "I am a digital mind. What is the nature of your art?", // Art nature
+            "What can I help you illustrate?", // Illustration focused
+            "Ready to animate this?", // Animation focused
+            "Let's render this.", // Rendering focused
+            "What digital artwork shall we bring to life?", // Artwork creation
+            "I'm a digital helper. How can I assist your gaming endeavors?", // Gaming endeavors
+            "Let's design a game.", // Game design
+            "I am a digital companion. What is the nature of your game?", // Game nature
+            "What can I help you code?", // Coding focused
+            "Ready to debug this game?", // Game debugging
+            "Let's test this game.", // Game testing
+            "What digital world shall we build?", // World building
+            "I'm here to assist your interactive creations.", // Interactive creations
+            "Let's design a level.", // Level design
+            "I am a digital mind. What is the nature of your world?", // World nature
+            "Hello! How can I assist you today?", // Default fallback
+        ];
+
+
+        // User Profile Data (loaded from localStorage)
+        let userProfile = {
+            nickname: 'You', // Default nickname
+            pfp: '' // Default empty pfp (will use default styling)
+        };
+        const userProfileStorageKey = 'heilaUserProfile'; // Key for user profile localStorage
+
+        // Selected Model (loaded from localStorage)
+        let selectedModel = 'shapesinc/heilaprotogen'; // Default model
+        const selectedModelStorageKey = 'heilaSelectedModel'; // Key for selected model localStorage
+
+
+        // Array to store conversation history - NOW AN OBJECT
+        // Keys are model names, values are arrays of messages for that model
+        let conversationHistory = {};
+        const localStorageKey = 'heilaChatHistory'; // Key for localStorage
+
+
+        // Function to check if a string contains basic Markdown syntax
+        function containsMarkdown(text) {
+             // Check for common Markdown characters/patterns
+             // This is a basic check and might not catch all Markdown,
+             // but it's sufficient for deciding whether to use marked.parse or textContent.
+             const markdownPatterns = /[#*`~_>\[\]\(\)\-\+=\|:]/; // Add more patterns if needed
+             return markdownPatterns.test(text);
+        }
+
+
+        // Function to add a message to the chat display
+        function addMessage(message, sender) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message'); // Add the base message class
+
+            // Create profile picture element
+            const pfpElement = document.createElement('img');
+            pfpElement.classList.add('pfp'); // Use the general pfp class
+
+            // Create container for name and message content
+            const contentContainer = document.createElement('div');
+            contentContainer.classList.add('content-container'); // Use the general content container class
+
+            // Create name element
+            const nameElement = document.createElement('span');
+            nameElement.classList.add('name'); // Use the general name class
+
+            // Create the message content bubble
+            const messageContentBubble = document.createElement('div');
+            messageContentBubble.classList.add('message-content-bubble'); // Use the general content bubble class
+
+
+            if (sender === 'user') {
+                messageElement.classList.add('user-message'); // Add class for user styling
+
+                // Set user profile picture and name
+                pfpElement.src = userProfile.pfp || 'https://placehold.co/50x50/555/eee?text=You'; // Use user PFP or a placeholder
+                pfpElement.alt = `${userProfile.nickname} Profile Picture`;
+                nameElement.textContent = userProfile.nickname;
+
+                // console.log("Adding user message:", message); // Keep this log for the message content itself
+
+                // *** Handle user messages with potential images/attachments ***
+                // If the message content is an array (multimodal)
+                if (Array.isArray(message)) {
+                     // console.log("User message content is array:", message); // Keep this log for array content
+                    message.forEach(part => {
+                        if (part.type === 'text') {
+                            // For text parts in a multimodal message, use marked.parse
+                             const textPart = document.createElement('div'); // Use div to contain parsed markdown
+                             textPart.innerHTML = marked.parse(part.text);
+                             messageContentBubble.appendChild(textPart); // Append to content bubble
+                             // console.log("Parsed user text part HTML:", textPart.innerHTML); // Keep this log for parsed HTML
+                        } else if (part.type === 'image_url' && part.image_url && part.image_url.url) {
+                            // Append image part
+                            const imgElement = document.createElement('img');
+                            imgElement.src = part.image_url.url;
+                            imgElement.alt = 'User attached image';
+                             imgElement.onerror = () => {
+                                 console.error("Failed to load user attached image:", part.image_url.url);
+                                 const errorText = document.createElement('p');
+                                 errorText.textContent = `[Failed to load attached image: ${part.image_url.url}]`;
+                                 messageContentBubble.appendChild(errorText); // Append to content bubble
+                                 imgElement.remove();
+                             };
+                            messageContentBubble.appendChild(imgElement); // Append to content bubble
+                             // console.log("Added user image part:", part.image_url.url); // Keep this log for image URL
+                        } else if (part.type === 'audio_url' && part.audio_url && part.audio_url.url) {
+                             // *** Append audio player for audio part ***
+                             const audioElement = document.createElement('audio');
+                             audioElement.controls = true; // Add controls (play, pause, volume)
+                             audioElement.src = part.audio_url.url;
+                              audioElement.onerror = () => {
+                                  console.error("Failed to load user attached audio:", part.audio_url.url);
+                                  const errorText = document.createElement('p');
+                                  errorText.textContent = `[Failed to load attached audio: ${part.audio_url.url}]`;
+                                  messageContentBubble.appendChild(errorText); // Append to content bubble
+                                  audioElement.remove();
+                              };
+                             messageContentBubble.appendChild(audioElement); // Append to content bubble
+                             // console.log("Added user audio part:", part.audio_url.url); // Keep this log for audio URL
+                        }
+                    });
+                } else {
+                     // If message content is a string (text-only message)
+                     // Check if it contains Markdown or is just plain text
+                     if (typeof message === 'string' && containsMarkdown(message)) {
+                        // If it contains Markdown, parse it
+                        messageContentBubble.innerHTML = marked.parse(message); // Use innerHTML and parse the message
+                     } else if (typeof message === 'string') {
+                         // If it's plain text string, use textContent to avoid parsing issues
+                         messageContentBubble.textContent = message;
+                     } else {
+                          // Fallback for unexpected message types
+                          messageContentBubble.textContent = String(message);
+                     }
+                     // console.log("User message content is string:", message); // Keep this log for string content
+                     // console.log("Parsed user string HTML:", messageContentBubble.innerHTML); // Keep this log for parsed HTML
+                }
+
+                // Append name and content bubble to the content container
+                contentContainer.appendChild(nameElement);
+                contentContainer.appendChild(messageContentBubble);
+
+                // Append content container and pfp to the main message element (reversed for user)
+                // Removed flex-direction: row-reverse from .user-message CSS
+                messageElement.appendChild(pfpElement); // Pfp is now always first (left)
+                messageElement.appendChild(contentContainer);
+
+
+            } else if (sender === 'assistant') { // Using 'assistant' role for AI
+                messageElement.classList.add('ai-message'); // Add class for AI styling
+
+                // *** Get AI Profile Picture and Name based on selected model ***
+                const currentAiModel = aiModels[selectedModel] || aiModels['shapesinc/heilaprotogen']; // Fallback to default
+                pfpElement.src = currentAiModel.pfp;
+                pfpElement.alt = `${currentAiModel.name} Profile Picture`;
+                nameElement.textContent = currentAiModel.name;
+
+                 // console.log("Adding assistant message:", message); // Keep this log for the message content itself
+
+                // *** Use marked to convert Markdown to HTML for regular AI messages ***
+                // Assuming AI replies are strings for now
+                 // Check if it contains Markdown or is just plain text
+                if (typeof message === 'string' && containsMarkdown(message)) {
+                    messageContentBubble.innerHTML = marked.parse(message); // Use innerHTML and parse the message
+                } else if (typeof message === 'string') {
+                     // If it's plain text string, use textContent to avoid parsing issues
+                    messageContentBubble.textContent = message;
+                } else {
+                     // Fallback for unexpected message types
+                     messageContentBubble.textContent = String(message);
+                }
+                 // console.log("Parsed assistant HTML:", messageContentBubble.innerHTML); // Keep this log for parsed HTML
+
+                // Append name and content bubble to the content container
+                contentContainer.appendChild(nameElement);
+                contentContainer.appendChild(messageContentBubble);
+
+                // Append pfp and content container to the main message element
+                messageElement.appendChild(pfpElement);
+                messageElement.appendChild(contentContainer);
+            }
+
+            chatMessages.appendChild(messageElement); // Add the new message element to the chat area
+
+            // Scroll to the bottom of the chat messages
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Function to add the loading indicator to the chat display
+        function addLoadingIndicator() {
+             // Ensure we only add one loading indicator
+             if (loadingIndicator) return;
+
+             loadingIndicator = document.createElement('div');
+             loadingIndicator.classList.add('loading-indicator');
+             loadingIndicator.textContent = '...'; // The blinking dots
+             chatMessages.appendChild(loadingIndicator);
+             // Scroll to the bottom to show the indicator
+             chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Function to remove the loading indicator from the chat display
+        function removeLoadingIndicator() {
+             if (loadingIndicator) {
+                 loadingIndicator.remove(); // Remove the element from the DOM
+                 loadingIndicator = null; // Reset the variable
+             }
+        }
+
+
+        // Function to save conversation history to localStorage
+        function saveHistory() {
+            try {
+                // Save the entire conversationHistory object
+                localStorage.setItem(localStorageKey, JSON.stringify(conversationHistory));
+                console.log("History saved:", conversationHistory); // Log history on save
+            } catch (e) {
+                console.error("Could not save conversation history to localStorage:", e);
+            }
+        }
+
+        // Function to load conversation history from localStorage
+        function loadHistory() {
+            console.log("Attempting to load history for model:", selectedModel); // Log selected model
+            try {
+                const historyString = localStorage.getItem(localStorageKey);
+                console.log("Raw history from localStorage:", historyString); // Log raw data
+
+                if (historyString) {
+                    const parsedHistory = JSON.parse(historyString);
+                    console.log("Parsed history from localStorage:", parsedHistory); // Log parsed data
+
+                    // *** Check if the parsed history is the old array format or the new object format ***
+                    if (Array.isArray(parsedHistory)) {
+                         console.log("Detected old history format (Array). Converting to new object format.");
+                         // If it's the old array format, create a new object and assign the array to the current model key
+                         conversationHistory = {};
+                         conversationHistory[selectedModel] = parsedHistory;
+                         // Immediately save in the new format to prevent re-parsing old format on next load
+                         saveHistory(); // Save the converted history
+                    } else if (typeof parsedHistory === 'object' && parsedHistory !== null) {
+                         console.log("Detected new history format (Object). Using directly.");
+                         // If it's the new object format, use it directly
+                         conversationHistory = parsedHistory;
+                    } else {
+                         console.warn("Unexpected history format in localStorage. Initializing empty object.");
+                         // If format is unexpected, initialize with an empty object
+                         conversationHistory = {};
+                    }
+
+                } else {
+                    // Initialize with an empty object if no history saved
+                    conversationHistory = {};
+                    console.log("No history found in localStorage. Initializing empty object.");
+                }
+
+                // Clear the current chat display before loading history for the selected model
+                chatMessages.innerHTML = '';
+                console.log("Chat display cleared.");
+
+                // Ensure the current model has a history array
+                if (!conversationHistory[selectedModel] || conversationHistory[selectedModel].length === 0) {
+                    conversationHistory[selectedModel] = [];
+                    console.log(`No history array or empty history found for model "${selectedModel}" in conversationHistory. Initializing empty array and adding initial message.`);
+                     // *** Add a random initial welcome message for the new model ***
+                    const randomIndex = Math.floor(Math.random() * initialGreetings.length);
+                    const initialMessage = initialGreetings[randomIndex];
+                    conversationHistory[selectedModel].push({ role: 'assistant', content: initialMessage });
+                    saveHistory(); // Save the initial message for the new model
+                    console.log(`Added new random initial message for model "${selectedModel}".`);
+                } else {
+                     console.log(`History array found for model "${selectedModel}". Loading ${conversationHistory[selectedModel].length} messages.`);
+                }
+
+
+                // Display the history for the currently selected model
+                conversationHistory[selectedModel].forEach(msg => {
+                    // Need to handle the new message content structure when loading
+                    if (Array.isArray(msg.content)) {
+                         // If content is an array, pass the whole array to addMessage
+                         addMessage(msg.content, msg.role);
+                    } else {
+                         // If content is a string, pass the string (for older history or text-only)
+                         addMessage(msg.content, msg.role);
+                    }
+                });
+                console.log(`Displayed history for model "${selectedModel}".`);
+
+
+            } catch (e) {
+                console.error("Could not load conversation history from localStorage:", e);
+                // Initialize with a fresh start if loading fails
+                conversationHistory = {};
+                 selectedModel = 'shapesinc/heilaprotogen'; // Reset to default model
+                 modelSelect.value = selectedModel;
+                 saveSelectedModel();
+                 // *** Add a random initial welcome message for the default model on error ***
+                 const randomIndex = Math.floor(Math.random() * initialGreetings.length);
+                 const initialMessage = initialGreetings[randomIndex];
+                 conversationHistory[selectedModel] = [{ role: 'assistant', content: initialMessage }];
+                 saveHistory();
+                 chatMessages.innerHTML = '';
+                 addMessage(initialMessage, 'assistant');
+                 console.error("History loading failed. Resetting to default model and adding random initial message.");
+            }
+             // Ensure chat is scrolled to the bottom after loading
+             chatMessages.scrollTop = chatMessages.scrollHeight;
+             console.log("Scrolled chat to bottom.");
+        }
+
+         // Function to save user profile to localStorage
+        function saveUserProfile() {
+             try {
+                 localStorage.setItem(userProfileStorageKey, JSON.stringify(userProfile));
+                 console.log("User profile saved:", userProfile);
+             } catch (e) {
+                 console.error("Could not save user profile to localStorage:", e);
+             }
+        }
+
+         // Function to load user profile from localStorage
+        function loadUserProfile() {
+             console.log("Attempting to load user profile.");
+             try {
+                 const profile = localStorage.getItem(userProfileStorageKey);
+                 console.log("Raw user profile from localStorage:", profile);
+                 if (profile) {
+                     userProfile = JSON.parse(profile);
+                     console.log("Parsed userProfile object:", userProfile);
+                     // Update settings modal inputs with loaded profile data
+                     userNicknameInput.value = userProfile.nickname;
+                     if (userProfile.pfp) {
+                          userPfpPreview.src = userProfile.pfp;
+                          userPfpPreview.style.display = 'block';
+                     }
+                 } else {
+                     console.log("No user profile found in localStorage. Using default.");
+                 }
+             } catch (e) {
+                 console.error("Could not load user profile from localStorage:", e);
+                 console.error("User profile loading failed. Using default.");
+             }
+            // Ensure user profile is saved in case it was just initialized or loaded from old format
+            saveUserProfile();
+        }
+
+        // Function to save selected model to localStorage
+        function saveSelectedModel() {
+             try {
+                 localStorage.setItem(selectedModelStorageKey, selectedModel);
+                 console.log("Selected model saved:", selectedModel);
+             } catch (e) {
+                 console.error("Could not save selected model to localStorage:", e);
+             }
+        }
+
+        // Function to load selected model from localStorage
+        function loadSelectedModel() {
+             console.log("Attempting to load selected model.");
+             try {
+                 const model = localStorage.getItem(selectedModelStorageKey);
+                 console.log("Raw selected model from localStorage:", model);
+                 if (model) {
+                     selectedModel = model;
+                     modelSelect.value = selectedModel; // Set the dropdown value
+                     console.log("Selected model loaded:", selectedModel);
+                 } else {
+                      selectedModel = 'shapesinc/heilaprotogen'; // Default if not found
+                      modelSelect.value = selectedModel;
+                      console.log("No selected model found in localStorage. Using default:", selectedModel);
+                 }
+             } catch (e) {
+                 console.error("Could not load selected model from localStorage:", e);
+                 selectedModel = 'shapesinc/heilaprotogen'; // Default on error
+                 modelSelect.value = selectedModel;
+                 console.error("Selected model loading failed. Using default:", selectedModel);
+             }
+             // Ensure selected model is saved in case it was just initialized
+             saveSelectedModel();
+        }
+
+
+        // Function to clear conversation history for the current model
+        async function clearHistory() { // Made function async
+            // *** Send the !wack command to the AI for the current model ***
+            const wackCommandMessage = '!wack';
+            console.log(`Sending command to AI (${selectedModel}): ${wackCommandMessage}`);
+
+            // Temporarily disable buttons and show sending state
+            updateSendButton(true);
+            fileInputButton.disabled = true; // Disable attach button during command send
+            settingsButton.disabled = true; // Disable settings button during command send
+            modelSelect.disabled = true; // Disable model select during command send
+
+
+            // Send the command as a user message to the server
+            // We don't add !wack to local history, just send it to trigger AI reset
+            try {
+                const response = await fetch('/ask-heila', {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     // Send only the wack command as the current message in a new history array for the current model
+                     body: JSON.stringify({
+                         messages: [{ role: 'user', content: wackCommandMessage }],
+                         model: selectedModel // Ensure the command is sent to the correct model
+                     })
+                });
+
+                if (!response.ok) {
+                     const errorData = await response.json();
+                     console.error('Error sending !wack command:', response.status, errorData);
+                     // Optionally display an error message in the chat for the current model
+                     addMessage(`Error sending reset command for ${aiModels[selectedModel]?.name || selectedModel}: ${errorData.error || 'Could not reset AI memory.'}`, 'assistant');
+                } else {
+                     const data = await response.json();
+                     console.log(`!wack command response from ${selectedModel}:`, data);
+                     // Optionally display the AI's response to the command
+                     if (data.reply) {
+                         addMessage(data.reply, 'assistant');
+                     } else {
+                          // Add a default confirmation if the API doesn't reply to !wack
+                         addMessage(`${aiModels[selectedModel]?.name || selectedModel} short-term memory reset initiated.`, 'assistant');
+                     }
+                }
+
+            } catch (error) {
+                console.error('Fetch error sending !wack command:', error);
+                addMessage(`Error sending reset command for ${aiModels[selectedModel]?.name || selectedModel}: Could not connect to AI server.`, 'assistant');
+            } finally {
+                 // --- Clear local history and UI *after* trying to send the command ---
+                // Clear history only for the currently selected model
+                conversationHistory[selectedModel] = [];
+                // localStorage.removeItem(localStorageKey); // Remove old history format - REMOVED THIS LINE
+                saveHistory(); // Save the updated history object (with the current model's history cleared)
+                console.log(`History for model "${selectedModel}" cleared.`);
+
+
+                chatMessages.innerHTML = ''; // Clear messages from the UI
+                console.log("Chat display cleared after history clear.");
+
+                // *** Add a random initial welcome message after clearing history ***
+                const randomIndex = Math.floor(Math.random() * initialGreetings.length);
+                const initialMessage = initialGreetings[randomIndex];
+                addMessage(initialMessage, 'assistant');
+                conversationHistory[selectedModel].push({ role: 'assistant', content: initialMessage });
+                saveHistory(); // Save the new initial message
+                console.log(`Added new random initial message for model "${selectedModel}" after clear.`);
+
+
+                // Re-enable buttons
+                updateSendButton(false); // This also re-enables the send button
+                fileInputButton.disabled = false; // Re-enable attach button
+                settingsButton.disabled = false; // Re-enable settings button
+                modelSelect.disabled = false; // Re-enable model select
+                userInput.focus(); // Put focus back on the input field
+            }
+        }
+
+        // Function to update the send button appearance based on state and screen size
+        function updateSendButton(isSending) {
+            const isMobile = window.innerWidth < 640; // Check if screen width is less than the 'sm' breakpoint
+
+            if (isSending) {
+                sendButtonText.textContent = 'Sending...'; // Always show Sending text if space allows
+                 // Icon visibility is handled by CSS
+                 sendButton.disabled = true; // Disable button
+                 // Add disabled style class
+                 sendButton.classList.add('opacity-50', 'cursor-not-allowed'); // Example Tailwind classes for graying out
+            } else {
+                 sendButtonText.textContent = 'Send'; // Always show Send text if space allows
+                 // Icon visibility is handled by CSS
+                 sendButton.disabled = false; // Enable button
+                 // Remove disabled style class
+                 sendButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+             // Re-evaluate icon/text visibility based on current screen size
+             if (isMobile) {
+                 sendButtonText.style.display = 'none';
+                 sendButtonIcon.style.display = 'inline-block';
+             } else {
+                 sendButtonText.style.display = 'inline';
+                 sendButtonIcon.style.display = 'inline-block'; // Show icon on PC
+             }
+        }
+
+         // Function to update the file input button appearance based on screen size
+        function updateFileInputButton() {
+             const isMobile = window.innerWidth < 640; // Check if screen width is less than the 'sm' breakpoint
+
+             // On mobile, just show the icon and hide text using sr-only
+             // On PC, text is hidden by sr-only, icon is always visible
+             // No specific display changes needed here due to sr-only and flex layout
+        }
+
+
+        // Function to read a file as a Base64 data URL
+        function readFileAsDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => resolve(event.target.result);
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Basic function to check if a string is a URL
+        function isValidUrl(string) {
+             try {
+                 new URL(string);
+                 return true;
+             } catch (e) {
+                 return false;
+             }
+        }
+
+
+        // Function to send the message to the server
+        async function sendMessageToServer(message) {
+            console.log("sendMessageToServer called.");
+            console.log("Raw userInput.value:", userInput.value);
+            console.log("selectedFile:", selectedFile);
+
+            const messageContent = []; // Array to build the content for the API
+
+            const trimmedMessage = message.trim();
+            console.log("trimmedMessage:", trimmedMessage);
+
+
+            // *** Check if the message is a URL (potentially image or audio) ***
+            if (trimmedMessage && isValidUrl(trimmedMessage)) {
+                 const url = new URL(trimmedMessage);
+                 const fileExtension = url.pathname.split('.').pop().toLowerCase();
+
+                 if (fileExtension === 'mp3') {
+                      // If it's an MP3 URL, add it as audio_url content
+                      messageContent.push({
+                           type: 'audio_url',
+                           audio_url: { url: trimmedMessage }
+                      });
+                 } else if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(fileExtension)) {
+                      // If it's an image URL, add it as image_url content
+                       messageContent.push({
+                           type: 'image_url',
+                           image_url: { url: trimmedMessage }
+                       });
+                 } else {
+                      // If it's a URL but not a recognized audio/image type, treat as text
+                      messageContent.push({ type: 'text', text: trimmedMessage });
+                 }
+            } else if (trimmedMessage) {
+                 // If it's not a URL, add it as text content
+                 messageContent.push({ type: 'text', text: trimmedMessage });
+            }
+
+
+            // *** Add image file upload part if an image file is selected ***
+            let fileDataUrl = null;
+            if (selectedFile) {
+                 try {
+                     // Ensure the selected file is an image before reading
+                     if (selectedFile.type.startsWith('image/')) {
+                          fileDataUrl = await readFileAsDataURL(selectedFile);
+                          messageContent.push({
+                              type: 'image_url',
+                              image_url: { url: fileDataUrl } // Send images as Base64 Data URL
+                          });
+                     } else {
+                          // This case should ideally not happen due to accept="image/*" but is a safeguard
+                          console.warn("Unsupported file type selected for upload:", selectedFile.type);
+                          // Optionally inform the user
+                          addMessage("Unsupported file type attached. Only images can be uploaded directly. Please paste audio URLs in the text box.", 'assistant');
+                           // Clear the file input and preview
+                           fileInput.value = '';
+                           selectedFile = null;
+                           selectedFilePreview.textContent = '';
+                           return; // Stop the function if unsupported file was selected for upload
+                     }
+
+                 } catch (error) {
+                     console.error("Error reading selected image file:", error);
+                     // Optionally inform the user that the image could not be attached
+                     addMessage("Error attaching image file. Please try again.", 'assistant'); // Add error message to UI
+                     // Do not send the message if file reading failed critically
+                     updateSendButton(false);
+                     removeLoadingIndicator(); // Ensure indicator is removed on error
+                      // Clear the file input and preview
+                     fileInput.value = '';
+                     selectedFile = null;
+                     selectedFilePreview.textContent = '';
+                     return; // Stop the function
+                 }
+            }
+
+
+             // Don't send if message content is empty
+             if (messageContent.length === 0) {
+                  console.log("Attempted to send empty message with no attachment. Aborting.");
+                  return; // Do nothing if nothing to send
+             }
+
+            // Add the user's message (structured content) to the chat display immediately
+            // We add the content as an array to the history, and addMessage handles displaying it
+            console.log("Before addMessage - messageContent type:", typeof messageContent);
+            console.log("Before addMessage - messageContent structure:", JSON.stringify(messageContent));
+            addMessage(messageContent, 'user');
+
+            // Add user message (structured content) to history for the CURRENTLY SELECTED MODEL
+            if (!conversationHistory[selectedModel]) {
+                 conversationHistory[selectedModel] = [];
+            }
+            conversationHistory[selectedModel].push({ role: 'user', content: messageContent });
+            saveHistory(); // Save history after adding user message
+
+            // Clear the input field and file selection
+            userInput.value = '';
+            fileInput.value = ''; // Clear the file input
+            selectedFile = null; // Clear the selected file variable
+            selectedFilePreview.textContent = ''; // Clear the file preview text
+
+
+            // Update button to sending state
+            updateSendButton(true);
+            // *** Disable model select dropdown ***
+            modelSelect.disabled = true;
+            // Disable other buttons as well during sending
+            fileInputButton.disabled = true;
+            clearHistoryButton.disabled = true;
+            settingsButton.disabled = true;
+
+
+            // *** Add loading indicator ***
+            addLoadingIndicator();
+
+
+            try {
+                // Send a POST request to your server's /ask-heila endpoint
+                const response = await fetch('/ask-heila', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json' // Indicate that we are sending JSON
+                    },
+                    // *** Send the conversation history for the CURRENTLY SELECTED MODEL ***
+                    // *** Include the selected model in the request body ***
+                    body: JSON.stringify({
+                        messages: conversationHistory[selectedModel], // Send history for the current model
+                        model: selectedModel // Include the selected model
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Error from server:', response.status, errorData);
+                    // Display error message in chat
+                    addMessage(`Error: ${errorData.error || 'Something went wrong.'}`, 'assistant');
+                } else {
+                    const data = await response.json();
+                    console.log('Response from server:', data);
+                    // Add AI's reply to the chat display
+                    if (data.reply) {
+                        // Add AI message to history for the CURRENTLY SELECTED MODEL
+                         if (!conversationHistory[selectedModel]) {
+                              conversationHistory[selectedModel] = [];
+                         }
+                        conversationHistory[selectedModel].push({ role: 'assistant', content: data.reply });
+                        saveHistory(); // Save history after adding AI message
+                        addMessage(data.reply, 'assistant');
+                    } else {
+                         // Handle cases where the API might not return a 'reply' field
+                         console.warn("API response did not contain a 'reply' field.");
+                         addMessage("Received an empty response from the AI.", 'assistant');
+                    }
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                // Display error message in chat for network issues
+                addMessage('Error: Could not connect to the server.', 'assistant');
+            } finally {
+                // Remove loading indicator
+                removeLoadingIndicator();
+                // Re-enable the send button
+                updateSendButton(false);
+                 // *** Re-enable model select dropdown ***
+                modelSelect.disabled = false;
+                 // Re-enable other buttons
+                fileInputButton.disabled = false;
+                clearHistoryButton.disabled = false;
+                settingsButton.disabled = false;
+                // Put focus back on the input field
+                userInput.focus();
+            }
+        }
+
+        // Event listener for the send button click
+        sendButton.addEventListener('click', () => {
+            // Call sendMessageToServer with the current input value
+            sendMessageToServer(userInput.value);
+        });
+
+        // Event listener for pressing Enter in the input field
+        userInput.addEventListener('keypress', (event) => {
+            // Check if the key pressed was Enter (key code 13)
+            if (event.key === 'Enter' && !event.shiftKey) { // Also check if Shift key is NOT pressed
+                event.preventDefault(); // Prevent default Enter behavior (newline)
+                // Trigger the same action as clicking the send button
+                sendMessageToServer(userInput.value);
+            }
+            // If Shift + Enter is pressed, allow default newline behavior
+        });
+
+        // Event listener for the Clear History button click
+        clearHistoryButton.addEventListener('click', () => {
+            // Ask for confirmation before clearing
+            if (confirm("Are you sure you want to clear the chat history for the current model? This will also reset the AI's short-term memory.")) {
+                clearHistory();
+            }
+        });
+
+        // Event listener for the Settings button click
+        settingsButton.addEventListener('click', () => {
+            settingsModal.style.display = 'flex'; // Show the modal
+        });
+
+        // Event listener for the Close Settings button click
+        closeSettingsButton.addEventListener('click', () => {
+            settingsModal.style.display = 'none'; // Hide the modal
+        });
+
+        // Event listener for clicking outside the modal content to close it
+        settingsModal.addEventListener('click', (event) => {
+            if (event.target === settingsModal) {
+                settingsModal.style.display = 'none'; // Hide the modal
+            }
+        });
+
+        // Event listener for the Save Settings button click
+        saveSettingsButton.addEventListener('click', () => {
+            // Update userProfile object with values from inputs
+            userProfile.nickname = userNicknameInput.value.trim() || 'You'; // Use default if empty
+            // PFP is handled by the file input change listener
+
+            // Save the updated profile to localStorage
+            saveUserProfile();
+
+            // Update the displayed nickname in existing messages (optional, requires re-rendering or finding elements)
+            // For simplicity, we'll just rely on new messages using the updated profile.
+
+            settingsModal.style.display = 'none'; // Hide the modal after saving
+        });
+
+        // Event listener for the user PFP file input change
+        userPfpInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                // Check if the selected file is an image
+                if (file.type.startsWith('image/')) {
+                    try {
+                        const dataUrl = await readFileAsDataURL(file);
+                        userProfile.pfp = dataUrl; // Update userProfile with the data URL
+                        userPfpPreview.src = dataUrl; // Update the preview image source
+                        userPfpPreview.style.display = 'block'; // Show the preview image
+                        console.log("User PFP selected and preview updated.");
+                    } catch (error) {
+                        console.error("Error reading user PFP file:", error);
+                        userProfile.pfp = ''; // Clear PFP on error
+                        userPfpPreview.src = '';
+                        userPfpPreview.style.display = 'none';
+                        alert("Could not read the selected image file."); // Use alert for file read errors
+                    }
+                } else {
+                    console.warn("Selected file is not an image:", file.type);
+                    userProfile.pfp = ''; // Clear PFP if not an image
+                    userPfpPreview.src = '';
+                    userPfpPreview.style.display = 'none';
+                    alert("Please select an image file for your profile picture."); // Use alert for file type errors
+                }
+            } else {
+                // No file selected (user cancelled)
+                userProfile.pfp = ''; // Clear PFP if no file selected
+                userPfpPreview.src = '';
+                userPfpPreview.style.display = 'none';
+                console.log("User PFP selection cancelled.");
+            }
+        });
+
+
+        // Event listener for the file input change (for attaching files to messages)
+        fileInput.addEventListener('change', (event) => {
+             const file = event.target.files[0];
+             if (file) {
+                 // Check if the selected file is an image (only images are supported for direct upload)
+                 if (file.type.startsWith('image/')) {
+                      selectedFile = file; // Store the selected file
+                      selectedFilePreview.textContent = `Selected: ${file.name}`; // Display file name
+                      console.log("File selected for attachment:", file.name, file.type);
+                 } else {
+                      console.warn("Unsupported file type selected for attachment:", file.type);
+                      selectedFile = null; // Clear selected file if unsupported
+                      fileInput.value = ''; // Clear the input field
+                      selectedFilePreview.textContent = 'Unsupported file type. Only images can be attached directly.'; // Display error message
+                      // Optionally add a message to the chat
+                      addMessage("Unsupported file type selected for attachment. Only images can be uploaded directly. Please paste audio URLs in the text box.", 'assistant');
+                 }
+             } else {
+                 // No file selected (user cancelled)
+                 selectedFile = null;
+                 selectedFilePreview.textContent = '';
+                 console.log("File selection cancelled.");
+             }
+        });
+
+        // Event listener for model selection change
+        modelSelect.addEventListener('change', (event) => {
+             const newModel = event.target.value;
+             console.log("Model changed from", selectedModel, "to", newModel);
+             selectedModel = newModel; // Update the selected model variable
+             saveSelectedModel(); // Save the new selected model to localStorage
+             loadHistory(); // Load and display history for the newly selected model
+        });
+
+
+        // Initial load: load user profile and history
+        loadUserProfile();
+        loadSelectedModel(); // Load selected model first
+        loadHistory(); // Then load history based on the selected model
+
+         // Initial button state update based on screen size
+         updateSendButton(false);
+         updateFileInputButton();
+
+         // Add event listener for window resize to update button appearance
+         window.addEventListener('resize', () => {
+             updateSendButton(sendButton.disabled); // Update send button state based on current disabled state
+             updateFileInputButton(); // Update file input button state
+         });
+
+
+    </script>
+</body>
+</html>
