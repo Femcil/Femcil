@@ -1,35 +1,291 @@
 <!-- Due to Glitches Server Limitations the homepage is forced to be called "Index" -->
 <!DOCTYPE html>
 <html lang="en">
-  
-  <!-- Site imports and tab decor --> 
+  <!-- Site imports and tab decor -->
   <head>
-    
     <!-- Web embed and tab design! -->
     <link rel="canonical" href="https://glitch-hello-website.glitch.me/" />
-    <meta name="description" content="Site for Femcil's Bio, Unblocked Games, AI, and more!"/>
+    <meta
+      name="description"
+      content="Site for Femcil's Bio, Unblocked Games, AI, and more!"
+    />
     <meta name="robots" content="index,follow" />
     <title>Protogen Cafe!</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" href="https://cdn.glitch.global/652efc9a-d433-49cc-a146-f4f4e9004668/sketch-1731012062516.png?v=1733637865091"/>
-
-    <!-- Imports when needed -->
-    <link rel="stylesheet" href="https://femcil.glitch.me/assets/css/homepage.css" />
+    <link
+      rel="icon"
+      href="https://cdn.glitch.global/652efc9a-d433-49cc-a146-f4f4e9004668/sketch-1731012062516.png?v=1733637865091"
+    />
     <script src="https://femcil.glitch.me/assets/js/birthday-ui.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /******************************************************************************
+
+      STARBUCKs GREEN LOL background: #329814;
+      ******************************************************************************/
+
+      body {
+        background: #0f0f0f;
+        height: 100vh;
+        display: grid;
+        place-items: center;
+      }
+
+      #logotxt {
+        color: #f0f0f0;
+        font-family: "Kanit", sans-serif;
+        font-weight: 600;
+        font-style: normal;
+        text-align: center;
+        font-size: 200%;
+        margin-top: 0%;
+      }
+
+      .module-border-wrap {
+        max-width: 80%;
+        padding: 1rem;
+        position: center;
+        background: linear-gradient(45deg, #03e9f4, #6800ff, #2d8dff);
+        animation: shadow 20s linear infinite;
+        padding: 4px;
+        background-size: 400%;
+        box-shadow: 0 0 50px #6800ff, 0 0 75px #2d8dff, 0 0 100px #03e9f4;
+        border-radius: 15px;
+        color: #f0f0f0;
+        font-family: "Kanit", sans-serif;
+        font-weight: 600;
+        font-style: normal;
+        font-size: 100%;
+      }
+
+      .module {
+        background: #222222;
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+      }
+
+      @keyframes shadow {
+        0% {
+          background-position: 0 0;
+        }
+        50.01% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: 0 0;
+        }
+      }
+
+      .bio-text {
+        color: #d1d5db; /* Light gray for body text */
+        font-family: Arial, sans-serif; /* A more readable font for paragraphs */
+        font-size: 110%;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+        text-align: center;
+        max-width: 800px; /* Limit width for readability */
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .section-title {
+        color: #ffffff; /* Brighter color for readability */
+        font-family: "Kanit", sans-serif;
+        font-weight: 600;
+        font-style: normal;
+        font-size: 180%;
+        text-align: center;
+        margin-top: 2.5rem;
+        margin-bottom: 2rem;
+        text-shadow: 0 0 5px #03e9f4; /* Reduced glow */
+      }
+
+      .project-grid {
+        display: grid;
+        grid-template-columns: 1fr; /* Single column on small screens */
+        gap: 2rem; /* Space between cards */
+        padding: 1rem;
+      }
+
+      @media (min-width: 768px) {
+        /* For larger screens, two columns */
+        .project-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      .project-card {
+        background-color: #1f1f1f; /* Dark background for cards */
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4); /* Deeper shadow */
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+      }
+
+      .project-card:hover {
+        transform: translateY(-5px); /* Lift on hover */
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.6); /* Even deeper shadow */
+      }
+
+      .project-title {
+        color: #ffffff; /* Brighter color for readability */
+        font-family: "Kanit", sans-serif;
+        font-weight: 600;
+        font-style: normal;
+        font-size: 150%;
+        margin-bottom: 1rem;
+        text-shadow: 0 0 5px #6800ff; /* Reduced glow */
+      }
+
+      .project-description {
+        color: #a0a0a0; /* Slightly lighter gray for descriptions */
+        font-family: "Kanit", sans-serif;
+        font-weight: 600;
+        font-style: normal;
+        font-size: 95%;
+        line-height: 1.5;
+        margin-bottom: 1.5rem;
+      }
+
+      .project-button {
+        display: inline-block;
+        padding: 0.8rem 2rem;
+        border-radius: 8px;
+        text-decoration: none;
+        color: white;
+        font-family: "Kanit", sans-serif;
+        font-weight: 600;
+        font-style: normal;
+        font-size: 110%;
+        transition: background-color 0.3s ease, transform 0.3s ease,
+          box-shadow 0.3s ease;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      }
+
+      .project-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
+      }
+
+      /* Mobile Responsiveness Adjustments */
+      @media (max-width: 768px) {
+        .module-border-wrap {
+          padding: 0.3rem; /* Less padding on small screens */
+        }
+        .module {
+          padding: 1.5rem; /* Less padding inside module */
+        }
+        .bio-text {
+          font-size: 100%; /* Slightly smaller bio text */
+        }
+        .section-title {
+          font-size: 150%; /* Smaller section title */
+        }
+        .project-grid {
+          grid-template-columns: 1fr; /* Ensures single column on small screens (already there) */
+          gap: 1.5rem;
+        }
+        .project-card {
+          padding: 1.5rem; /* Less padding in project cards */
+        }
+        .project-title {
+          font-size: 130%; /* Smaller project title */
+        }
+        .project-button {
+          font-size: 100%; /* Smaller button text */
+          padding: 0.6rem 1.5rem;
+        }
+        #Multibar {
+          width: 95%; /* Make it slightly wider on smaller screens */
+          height: auto; /* Let content define height */
+          padding: 0.8rem 0.5rem; /* Slightly less padding */
+          border-radius: 0px 0px 30px 30px; /* Smaller rounded corners */
+        }
+        .nav-link {
+          font-size: 100%; /* Smaller font for links on mobile */
+          padding: 0.5rem 0.8rem; /* Adjust padding for touch targets */
+        }
+      }
+    </style>
   </head>
-  
+
   <!-- Site Build -->
   <body>
-    <!-- Multibutton menu -->
-    <div id="Multibar"></div>
-    <!-- The logo section -->
-    <!-- Skipped <div id="title"><img src="https://cdn.glitch.global/652efc9a-d433-49cc-a146-f4f4e9004668/sketch-1731012062516.png?v=1733637865091" id="logo"></div> -->
-    <p id="logotxt">Femcil's About Me!</p>
     <!-- The board -->
     <div class="module-border-wrap">
       <div class="module">
-        Welcome To Femcils Homepage! Try out our games and maybe join our Discord!
+        <p id="logotxt">Femcil's About Me!</p>
+        <p class="bio-text">
+          Welcome to my digital playground! I'm Femcil, a passionate self-taught
+          developer constantly exploring the exciting world of web technologies
+          and AI. My journey into code is fueled by curiosity and the thrill of
+          building interactive experiences.
+        </p>
+        <p class="bio-text mb-8">
+          I specialize in real-time web applications and AI integration. This
+          site showcases some of my latest adventures.
+        </p>
+
+        <h2 class="section-title">My Creations</h2>
+
+        <div class="project-grid">
+          <div class="project-card">
+            <h3 class="project-title">Heila AI</h3>
+            <p class="project-description">
+              My personal AI assistant, designed for engaging and intelligent
+              conversations directly in your browser. All stored chats, name,
+              and pfp is done locally on your browser!
+            </p>
+            <a
+              href="heila.html"
+              class="project-button bg-purple-600 hover:bg-purple-700"
+              >Launch Heila</a
+            >
+          </div>
+
+          <div class="project-card">
+            <h3 class="project-title">Agario Game Server</h3>
+            <p class="project-description">
+              A custom-built, real-time multiplayer game server that challenged
+              me to master WebSockets and intricate game logic.
+            </p>
+            <a
+              href="agario.html"
+              class="project-button bg-green-600 hover:bg-green-700"
+              >Play Agario</a
+            >
+          </div>
+        </div>
+        <h2 class="section-title">Other</h2>
+        <div class="project-grid">
+          <div class="project-card">
+            <h3 class="project-title">Discord Server!</h3>
+            <p class="project-description">
+              Join today for updates on projects, get to know what newer
+              projects are coming soon, and see what the future for my site
+              could be!
+            </p>
+            <a
+              href="https://discord.gg/tewW9WqWt9"
+              class="project-button bg-green-600 hover:bg-green-700"
+              >Join server!</a
+            >
+          </div>
+        </div>
+
+        <p class="bio-text mt-8">
+          Feel free to explore my projects above, and connect with me to follow
+          my coding adventures!
+        </p>
       </div>
     </div>
   </body>
