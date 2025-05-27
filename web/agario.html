@@ -28,242 +28,315 @@
       type="text/css"
     />
     <script src="https://femcil.onrender.com/assets/js/quadtree.js"></script>
-    <script src="https://femcil.onrender.com/assets/js/main_out.js"></script>
+    <script src="https://distinct-tinted-beryllium.glitch.me/assets/js/main_out.js"></script>
     <script src="https://femcil.onrender.com/assets/js/birthday-ui.js"></script>
-    <style> 
-        /* General Body Styles */
-        html, body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden; /* Hide scrollbars */
-            width: 100%;
-            height: 100%;
-            font-family: "Ubuntu", sans-serif;
-            background-color: #1a1a1a; /* Dark background */
-            color: #e0e0e0; /* Light text color */
-        }
+    <style>
+      /* General Body Styles */
+      body {
+        overflow: hidden; /* Hide scrollbars */
+        width: 100%;
+        height: 100%;
+        font-family: "Ubuntu", sans-serif;
+        background-color: #1a1a1a; /* Dark background */
+        color: #e0e0e0; /* Light text color */
+      }
 
-        /* Canvas should fill the screen and be at a higher z-index */
-        canvas {
-            display: block;
-            position: absolute; /* Position relative to the body */
-            top: 0;
-            left: 0;
-            width: 100%; /* Make canvas fill the viewport */
-            height: 100%; /* Make canvas fill the viewport */
-            z-index: 1; /* Ensure canvas is visible and receives events */
-            background-color: #222222; /* Fallback background for canvas */
-        }
+      .board {
+        display:block;
+        opacity:1;
+      }
+      
+      /* Main Menu Container - Full screen overlay */
+      #overlays {
+        position: absolute; /* Position relative to the body */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: block; /* Hidden by default, client.js will make it visible */
+        justify-content: center; /* Center content horizontally */
+        align-items: center; /* Center content vertically */
+        background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent overlay */
+        z-index:0;
+      }
 
-        /* Main Menu Container - Full screen overlay */
-        #overlays {
-            position: absolute; /* Position relative to the body */
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: none; /* Hidden by default, client.js will make it visible */
-            justify-content: center; /* Center content horizontally */
-            align-items: center; /* Center content vertically */
-            background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent overlay */
-            z-index: 10; /* Ensure menu is on top of canvas */
-        }
+      /* Menu Box - Styled like the bio page's main card */
+      .menu-box {
+        margin: auto;
+        background-color: #2a2a2a; /* Card background */
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4); /* Shadow */
+        border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+        box-sizing: border-box; /* Ensures padding doesn't push width over */
+      }
 
-        /* Menu Box - Styled like the bio page's main card */
-        .menu-box {
-            background-color: #2a2a2a; /* Card background */
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4); /* Shadow */
-            border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-            box-sizing: border-box; /* Ensures padding doesn't push width over */
-        }
+      /* Menu Title - Mimics heading styles */
+      .menu-title {
+        color: #00a2ff; /* Bright blue from headings */
+        font-size: 2.8em; /* Slightly larger for impact */
+        margin-bottom: 25px;
+        text-shadow: 0 0 8px rgba(0, 162, 255, 0.7); /* Glow effect */
+        font-weight: 700; /* Ubuntu bold */
+      }
 
-        /* Menu Title - Mimics heading styles */
-        .menu-title {
-            color: #00a2ff; /* Bright blue from headings */
-            font-size: 2.8em; /* Slightly larger for impact */
-            margin-bottom: 25px;
-            text-shadow: 0 0 8px rgba(0, 162, 255, 0.7); /* Glow effect */
-            font-weight: 700; /* Ubuntu bold */
-        }
+      /* Input Fields and Select - Styled like inputs */
+      .input-group input,
+      .input-group select {
+        width: calc(100% - 20px); /* Account for padding */
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #4a4a4a; /* Border */
+        border-radius: 5px;
+        background-color: #3a3a3a; /* Background */
+        color: #e0e0e0; /* Text color */
+        font-size: 1em;
+        box-sizing: border-box; /* Include padding in width */
+      }
 
-        /* Input Fields and Select - Styled like inputs */
-        .input-group input,
-        .input-group select {
-            width: calc(100% - 20px); /* Account for padding */
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #4a4a4a; /* Border */
-            border-radius: 5px;
-            background-color: #3a3a3a; /* Background */
-            color: #e0e0e0; /* Text color */
-            font-size: 1em;
-            box-sizing: border-box; /* Include padding in width */
-        }
+      .input-group input::placeholder {
+        color: #a0a0a0; /* Lighter placeholder text */
+      }
 
-        .input-group input::placeholder {
-            color: #a0a0a0; /* Lighter placeholder text */
-        }
+      /* Button Group Styling */
+      .button-group button {
+        width: 100%;
+        padding: 12px 20px;
+        margin-bottom: 10px;
+        border: none;
+        border-radius: 5px;
+        font-size: 1.1em;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.1s ease; /* Smooth transitions */
+        color: #fff;
+        font-weight: 700;
+      }
 
-        /* Button Group Styling */
-        .button-group button {
-            width: 100%;
-            padding: 12px 20px;
-            margin-bottom: 10px;
-            border: none;
-            border-radius: 5px;
-            font-size: 1.1em;
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.1s ease; /* Smooth transitions */
-            color: #fff;
-            font-weight: 700;
-        }
+      /* Primary Button (Play) */
+      .menu-button.primary {
+        background-color: #007bff;
+      }
 
-        /* Primary Button (Play) */
-        .menu-button.primary {
-            background-color: #007bff;
-        }
+      .menu-button.primary:hover {
+        background-color: #0056b3;
+        transform: translateY(-2px); /* Slight lift on hover */
+      }
 
-        .menu-button.primary:hover {
-            background-color: #0056b3;
-            transform: translateY(-2px); /* Slight lift on hover */
-        }
+      /* Secondary Buttons (Spectate, Settings, Gallery) */
+      .menu-button {
+        background-color: #6c757d; /* A common secondary button color */
+      }
 
-        /* Secondary Buttons (Spectate, Settings, Gallery) */
-        .menu-button {
-            background-color: #6c757d; /* A common secondary button color */
-        }
+      .menu-button:hover {
+        background-color: #5a6268;
+        transform: translateY(-2px);
+      }
 
-        .menu-button:hover {
-            background-color: #5a6268;
-            transform: translateY(-2px);
-        }
+      .menu-button:active {
+        transform: translateY(0); /* Return to normal position on click */
+      }
+      
+      #settings_overlay {
+        position: absolute; /* Position relative to the body */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: block; /* Hidden by default, client.js will make it visible */
+        justify-content: center; /* Center content horizontally */
+        align-items: center; /* Center content vertically */
+        background-color: rgba(0, 0, 0, 0); /* Semi-transparent overlay */
+        z-index:2;
+      }
+      
+      /* Settings Panel Styling */
+      .settings {
+        padding: 12px 12px;
+        margin: auto;
+        background-color: #2a2a2a; /* Card background */
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+        height:90%;
+        z-index:3;
+      }
+      
+      .setting-cards {
+        margin-bottom: 12px;
+        width: 90%;
+        height: auto;
+        z-index:4;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 12px;
+        background-color: #1a1a1a;
+        text-align:center;
+        text-color:#FFFFFF;
+        font-size:14px;
+      }
+      
+      .setting-card-title {
+        text-align:center;
+        text-color:#FFFFFF;
+        font-size:36px;
+      }
+      
+      .setting-exit{
+        width: 90%;
+        padding: 12px 20px;
+        margin-left: auto;
+        margin-right: auto;
+        border: none;
+        border-radius: 5px;
+        font-size: 1.1em;
+        cursor: pointer;
+        font-weight: 700;
+        background-color: #6c757d; /* A common secondary button color */
+        position:relative;
+        bottom:0;
+        z-index:5;
+      }
+      
+      .setting-exit:hover {
+        background-color: #5a6268;
+        transform: translateY(-2px);
+      }
+      
+      .checkbox label {
+        display: block;
+        margin-bottom: 8px;
+        cursor: pointer;
+        text-align: left; /* Align checkbox labels left */
+      }
 
-        .menu-button:active {
-            transform: translateY(0); /* Return to normal position on click */
-        }
+      .checkbox input[type="checkbox"] {
+        margin-right: 10px;
+        background-color: #3a3a3a; /* Matches input background */
+        border: 1px solid #4a4a4a;
+        vertical-align: middle; /* Align checkbox with text */
+      }
 
-        /* Settings Panel Styling */
-        #settings_hold {
-            position: absolute; /* Position relative to the body */
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8); /* Darker overlay for settings */
-            display: none; /* Hide by default */
-            justify-content: center;
-            align-items: center;
-            z-index: 11; /* Even higher than main menu */
-        }
+      /* Basic styling for range input */
+      input[type="range"] {
+        width: calc(100% - 20px);
+        margin-top: 10px;
+        -webkit-appearance: none; /* Remove default styling */
+        appearance: none;
+        background: #4a4a4a;
+        border-radius: 5px;
+        height: 8px;
+        outline: none;
+        transition: opacity 0.2s;
+      }
 
-        #settings_tab {
-            background-color: #2a2a2a; /* Matches main menu container */
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
-            max-width: 400px;
-            width: 90%;
-            color: #e0e0e0;
-            text-align: center; /* Center content within settings tab */
-        }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #007bff;
+        cursor: pointer;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+      }
 
-        #setting_top {
-            font-size: 1.2em;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #00a2ff; /* Matches menu title accent color */
-        }
-
-        .checkbox label {
-            display: block;
-            margin-bottom: 8px;
-            cursor: pointer;
-            text-align: left; /* Align checkbox labels left */
-        }
-
-        .checkbox input[type="checkbox"] {
-            margin-right: 10px;
-            background-color: #3a3a3a; /* Matches input background */
-            border: 1px solid #4a4a4a;
-            vertical-align: middle; /* Align checkbox with text */
-        }
-
-        /* Basic styling for range input */
-        input[type="range"] {
-            width: calc(100% - 20px);
-            margin-top: 10px;
-            -webkit-appearance: none; /* Remove default styling */
-            appearance: none;
-            background: #4a4a4a;
-            border-radius: 5px;
-            height: 8px;
-            outline: none;
-            transition: opacity .2s;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #007bff;
-            cursor: pointer;
-            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-        }
-
-        input[type="range"]::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #007bff;
-            cursor: pointer;
-            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-        }
+      input[type="range"]::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #007bff;
+        cursor: pointer;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+      }
+      #chat_textbox {
+        position: absolute; /* Position relative to the body */
+        bottom:0;
+        left:0;
+        background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent overlay */
+      }
     </style>
   </head>
   <body>
-    <canvas id="canvas" width="800" height="600"></canvas>
-    <div id="overlays">
-        <div class="menu-box">
-            <h1 class="menu-title">Femcil Agar.io</h1>
-
-            <div class="input-group">
-                <input
-                    type="text"
-                    id="nickname-input"
-                    placeholder="Enter Nickname"
-                    maxlength="150000"
-                />
-                <input
-                    type="text"
-                    id="skin-input"
-                    placeholder="Skin Name (optional)"
-                />
-                <select id="server-select">
-                    <option value="femcil-main.onrender.com">Femcil Main</option>
-                    <option value="femcil-main.onrender.com">Femcil Main Backup</option>
-                </select>
-            </div>
-            <div class="button-group">
-                <button id="play-btn" class="menu-button primary">Play</button>
-                <button id="spectate-btn" class="menu-button">Spectate</button>
-                <button id="settings-btn" class="menu-button">Settings</button>
-                <button id="gallery-btn" class="menu-button">Skins Gallery</button>
-            </div>
+    <canvas id="canvas" class="board" width="800" height="600">Your browser does not support the canvas tag.</canvas>
+    <div id="settings_overlay">
+      <div class="settings">
+        <div class="setting-cards"> <!-- Graphics -->
+          <h1 class="setting-cards-title">Graphics</h1>
+          <label><input id="showSkins" type="checkbox" />ѕкιηѕ</label>
+          <label><input id="showNames" type="checkbox" />ηαмєѕ</label>
+          <label><input id="showColor" type="checkbox" />¢σℓσя</label>
+          <label><input id="showMass" type="checkbox" />мαѕѕ</label>
+          <label><input id="fillSkin" type="checkbox" />ƒιℓℓ ѕкιη</label>
+          <label><input id="jellyPhysics" type="checkbox" />נєℓℓу ρнуѕι¢ѕ</label>
         </div>
+        <div class="setting-cards"> <!-- UI -->
+          <h1 class="setting-cards-title">Game UI</h1>
+          <label><input id="backgroundSectors" type="checkbox" />вα¢кgяσυη∂ ѕє¢тσяѕ</label>
+          <label><input id="showMinimap" type="checkbox" />мιηι мαρ</label>
+          <label><input id="showPosition" type="checkbox" />ρσѕιтιση</label>
+          <label><input id="showBorder" type="checkbox" />вσя∂єя</label>
+          <label><input id="showGrid" type="checkbox" />gяι∂</label>
+          <label><input id="moreZoom" type="checkbox" />zσσм-συт</label>
+          <label><input id="showChat" type="checkbox" />¢нαт</label>
+        </div>
+        <div class="setting-cards"> <!-- Music & Audio -->
+          <h1 class="setting-cards-title">Music &amp; Audio</h1>
+          <label><input id="playSounds" type="checkbox" />Sσυɳԃʂ</label>
+          <label><input id="soundsVolume" type="range" min="0" max="1" step="any"/></label>
+          <select id="music-select">
+            <option value="">Agario Opening - Cubic</option>
+            <option value="">Cellular Brawl - TechnoTheProtogen</option>
+          </select>
+        </div>
+        <button id="setting-exit" class="setting-exit">Exit</button>
+      </div>
     </div>
+    <div id="overlays">
+      <div id="connecting" display="none"></div>
+      <div class="menu-box">
+        <h1 class="menu-title">Femcil Agar.io</h1>
+
+        <div class="input-group">
+          <input
+            type="text"
+            id="nickname-input"
+            placeholder="Enter Nickname"
+            maxlength="150000"
+          />
+          <input
+            type="text"
+            id="skin-input"
+            placeholder="Skin Name (optional)"
+          />
+          <select id="server-select">
+            <option value="femcil-main.onrender.com">Femcil Main</option>
+            <option value="femcil-main.onrender.com">Femcil Main Backup</option>
+          </select>
+        </div>
+        <div class="button-group">
+          <button id="play-btn" class="menu-button primary">Play</button>
+          <button id="spectate-btn" class="menu-button">Spectate</button>
+          <button id="settings-btn" class="menu-button">Settings</button>
+          <button id="gallery-btn" class="menu-button">Skins Gallery</button>
+        </div>
+      </div>
+    </div>
+    <input
+      type="text"
+      id="chat_textbox"
+      placeholder="𝗣𝗿𝗲𝘀𝘀 𝗘𝗻𝘁𝗲𝗿 𝗧𝗼 𝗖𝗵𝗮𝘁"
+      maxlength="140"
+    />
     <div id="mobileStuff" style="display: none">
-        <div id="touchpad"></div>
-        <div id="touchCircle" style="display: none"></div>
-        <img src="/assets/img/split.png" id="splitBtn" />
-        <img src="/assets/img/eject.png" id="ejectBtn" />
+      <div id="touchpad"></div>
+      <div id="touchCircle" style="display: none"></div>
+      <img src="/assets/img/split.png" id="splitBtn" />
+      <img src="/assets/img/eject.png" id="ejectBtn" />
     </div>
-    <div style="font-family: 'Ubuntu'">&nbsp;</div>
   </body>
 </html>
