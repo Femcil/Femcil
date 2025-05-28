@@ -377,7 +377,10 @@
       wsCleanup();
     }
     byId("connecting").show(0.5);
-    ws = new WebSocket("ws" + (USE_HTTPS ? "s" : "") + "://" + (wsUrl = url));
+    // ws = new WebSocket("ws" + (USE_HTTPS ? "s" : "") + "://" + (wsUrl = url));
+    let socketProtocol = USE_HTTPS ? "wss://" : "ws://";
+    ws = new WebSocket(socketProtocol + url); // `url` here is just the hostname (or hostname:port)
+    wsUrl = url; // Store the base URL for reconnection if needed
     ws.binaryType = "arraybuffer";
     ws.onopen = wsOpen;
     ws.onmessage = wsMessage;
