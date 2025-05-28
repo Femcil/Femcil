@@ -377,10 +377,7 @@
       wsCleanup();
     }
     byId("connecting").show(0.5);
-    // ws = new WebSocket("ws" + (USE_HTTPS ? "s" : "") + "://" + (wsUrl = url));
-    let socketProtocol = USE_HTTPS ? "wss://" : "ws://";
-    ws = new WebSocket(socketProtocol + url); // `url` here is just the hostname (or hostname:port)
-    wsUrl = url; // Store the base URL for reconnection if needed
+    ws = new WebSocket("ws" + (USE_HTTPS ? "s" : "") + "://" + (wsUrl = url));
     ws.binaryType = "arraybuffer";
     ws.onopen = wsOpen;
     ws.onmessage = wsMessage;
@@ -775,6 +772,7 @@
     backgroundSectors: true,
     jellyPhysics: true,
   };
+  
   var pressed = {
     " ": false,
     w: false,
@@ -799,7 +797,6 @@
   function hideESCOverlay() {
     escOverlayShown = false;
     byId("overlays").hide();
-    byId("settings_hold").hide();
     byId("gallery").hide();
   }
   function showESCOverlay() {
@@ -1863,6 +1860,63 @@
       }
       hideESCOverlay();
     });
+    
+    // Settings.
+    byId("settings-btn").addEventListener("click", function () {
+      if (document.getElementById('settings_overlay').style.display === "block") {
+        document.getElementById('settings_overlay').style.display = "none";
+      }else{
+        document.getElementById('settings_overlay').style.display = "block";
+      }
+    });
+    
+    byId("setting-exit").addEventListener("click", function () {
+      if (document.getElementById('settings_overlay').style.display === "block") {
+        document.getElementById('settings_overlay').style.display = "none";
+      }else{
+        document.getElementById('settings_overlay').style.display = "block";
+      }
+    });
+    
+    var Music = {
+      1 : new Audio("./assets/sound/music1.mp3"),
+      2 : new Audio("./assets/sound/music2.mp3"),
+    }
+    
+    var currentMusic = Music['1']
+    
+    document.getElementById('settings-music').onchange = function() {
+      if (document.getElementById('settings-music').value === "cycle") {
+        currentMusic.pause();
+        currentMusic.currentTime = 0;
+        currentMusic = Music[getRandomIntInclusive(1, Object.keys(Music).length)];
+        currentMusic.play();
+      }else if (document.getElementById('settings-music').value === "none") {
+        currentMusic.pause();
+        currentMusic.currentTime = 0;
+      }else {
+        currentMusic.pause();
+        currentMusic.currentTime = 0;
+        currentMusic = Music[document.getElementById('settings-music').value];
+        currentMusic.play();
+      }
+    }
+    
+    currentMusic.onended = function() {
+      if (document.getElementById('settings-music').value === "cycle") {
+        currentMusic = Music[getRandomIntInclusive(1, Object.keys(Music).length)];
+        currentMusic.play();
+      }else{
+        currentMusic.play();
+      }
+    }
+    function getRandomIntInclusive(min, max) {
+      min = Math.ceil(min);
+      max = Math.floor(max);
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    
     window.onkeydown = keydown;
     window.onkeyup = keyup;
     chatBox.onblur = function () {
@@ -1940,7 +1994,8 @@
       var div = /ip=([\w\W]+):([0-9]+)/.exec(window.location.search.slice(1));
       if (div) wsInit(div[1] + ":" + div[2]);
     }
-    window.setserver(window.location.hostname + ":" + window.location.port);
+    //window.location.hostname
+    window.setserver(document.getElementById('server-select').value + ":" + window.location.port);
     window.requestAnimationFrame(drawGame);
     log.info("init done in " + (Date.now() - LOAD_START) + "ms");
   }
@@ -1967,116 +2022,3 @@
   };
   window.addEventListener("DOMContentLoaded", init);
 })();
-//----------Music Loop-------------------------------------------------------------------------------------------------------------
-var backgroundAudio1 = new Audio("./assets/sound/music1.mp3");
-var backgroundAudio2 = new Audio("./assets/sound/music2.mp3");
-backgroundAudio1.onended = function () {
-  console.log("Playing background audio");
-  backgroundAudio1.play();
-};
-backgroundAudio2.onended = function () {
-  console.log("Playing background audio");
-  backgroundAudio2.play();
-};
-//---------Check Box Funciton--------------------------------------
-//works like a charms
-//const music = document.querySelector('.checked');
-function go() {
-  if (document.getElementById("music").checked == true) {
-    music();
-  } else if (document.getElementById("music").checked == false) {
-    music1();
-  }
-}
-function track1() {
-  backgroundAudio1.play();
-  backgroundAudio2.pause();
-  document.getElementById("musictype2").checked = false;
-}
-function track1stop() {
-  backgroundAudio1.pause();
-  backgroundAudio2.pause();
-}
-function track2() {
-  backgroundAudio1.pause();
-  backgroundAudio2.play();
-  document.getElementById("musictype1").checked = false;
-}
-function track2stop() {
-  backgroundAudio1.pause();
-  backgroundAudio2.pause();
-}
-//music type 2
-//musictype is used
-function music() {
-  if (document.getElementById("musictype1").checked == true) {
-    if (document.getElementById("music").checked == true) {
-      track1();
-    }
-  } else if (document.getElementById("musictype1").checked == false) {
-    track1stop();
-  }
-}
-function music1() {
-  if (document.getElementById("musictype2").checked == true) {
-    if (document.getElementById("music").checked == true) {
-      track2();
-    }
-  } else if (document.getElementById("musictype2").checked == false) {
-    track2stop();
-  }
-}
-function musics() {
-  if (document.getElementById("music").checked == true) {
-    document.getElementById("tack").style.display = "block";
-  } else if (document.getElementById("music").checked == false) {
-    document.getElementById("tack").style.display = "none";
-    document.getElementById("musictype1").checked = false;
-    document.getElementById("musictype2").checked = false;
-    track2stop();
-    track1stop();
-  }
-}
-//--------------------Cursor----------------------------------------------------------------------------------------------------------------------
-const cursorRounded = document.querySelector(".rounded");
-const cursorPointed = document.querySelector(".pointed");
-
-const moveCursor = (e) => {
-  const mouseY = e.clientY;
-  const mouseX = e.clientX;
-
-  cursorRounded.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
-
-  cursorPointed.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
-};
-
-window.addEventListener("mousemove", moveCursor);
-//----------------------------------------------------------------------------------------------------------------------------------------------
-function openmList() {
-  var settings2 = document.getElementById("settings_hold");
-  if (settings2.style.display === "none") {
-    settings2.style.display = "block";
-  } else {
-    settings2.style.display = "none";
-  }
-}
-function alert_close() {
-  var alert = document.getElementById("alert");
-  if (alert.style.display === "block") {
-    alert.style.display = "none";
-  }
-}
-//--------------------------------------------------------------------------------------------------------------------------------------------------------------
-function Cursora() {
-  var x = document.getElementById("circle");
-  var y = document.getElementById("cursor2");
-  if (x.style.display === "none") {
-    x.style.display = "block";
-  } else if (x.style.display === "block") {
-    x.style.display = "none";
-  }
-}
-document.addEventListener("visibilitychange", (event) => {
-  if (document.visibilityState == "visible") {
-  }
-});
