@@ -1881,6 +1881,8 @@
     var Music = {
       1 : new Audio("./assets/sound/music1.mp3"),
       2 : new Audio("./assets/sound/music2.mp3"),
+      3 : new Audio("./assets/sound/mid-match-arena.mp3"),
+      4 : new Audio("./assets/sound/empty-space.mp3"),
     }
     
     var currentMusic = Music['1']
