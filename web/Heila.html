@@ -47,9 +47,10 @@
             margin-bottom: 0.5rem; /* Space between messages */
             padding: 0; /* Padding is now on the content bubble */
             border-radius: 0.75rem; /* Rounded corners for messages container */
-            max-width: 90%; /* Limit message width to allow space for pfp/name */
+            max-width: 100%; /* Limit message width to allow space for pfp/name */
             word-wrap: break-word; /* Break long words */
-            color: #fff; /* Default text color for messages */
+            color: #c2c2c2; /* Default text color for messages */
+            font-weight: bold;
             display: flex; /* Use flexbox for layout */
             align-items: flex-start; /* Align items to the top */
             gap: 0.5rem; /* Space between pfp/name and message bubble */
@@ -1321,12 +1322,24 @@
                 <input type="file" id="user-pfp-input" accept="image/*">
                 <img id="user-pfp-preview" src="" alt="Profile Picture Preview" style="display: none;">
             </div>
+            <div>
+                <label for="text-color">Text Color:</label>  
+                <input type="text" id="text-color" placeholder="#FFFFFF">
+            </div>
             <button id="save-settings-button">Save Settings</button>
             <button id="close-settings-button">Close</button>
         </div>
     </div>
 
+    <script>
+      document.getElementById('text-color').onchange = function() {
+        for (let i=0; i<document.getElementsByClassName('message').length; i++) {
+          document.getElementsByClassName('message')[i].style.color = document.getElementById('text-color').value;
+        }
+      }
 
+    </script>
+  
     <script>
         // *** Configure marked to use breaks ***
         marked.setOptions({
@@ -1346,8 +1359,8 @@
         const fileInput = document.getElementById('file-input'); // Get the file input
         const selectedFilePreview = document.getElementById('selected-file-preview'); // Get the file preview area
         const fileInputButton = document.querySelector('.file-input-button'); // Get the file input label (button)
-         const fileInputButtonText = fileInputButton.querySelector('.button-text'); // Get the text span in file button
-         const fileInputButtonIcon = fileInputButton.querySelector('.button-icon'); // Get the icon svg in file button
+        const fileInputButtonText = fileInputButton.querySelector('.button-text'); // Get the text span in file button
+        const fileInputButtonIcon = fileInputButton.querySelector('.button-icon'); // Get the icon svg in file button
 
         // Settings Modal Elements
         const settingsModal = document.getElementById('settings-modal');
