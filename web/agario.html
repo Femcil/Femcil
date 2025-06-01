@@ -28,8 +28,174 @@
       type="text/css"
     />
     <script src="https://femcil.onrender.com/assets/js/quadtree.js"></script>
-    <script src="https://femcil.onrender.com/assets/js/main_out.js"></script>
+    <script src="https://distinct-tinted-beryllium.glitch.me/assets/js/main_out.js"></script>
     <script src="https://femcil.onrender.com/assets/js/birthday-ui.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // --- Constants (can be global or passed into the function) ---
+        const SKIN_LIST_URL =
+          "https://raw.githubusercontent.com/Pencil0/femcilskinserver/refs/heads/main/skinList.txt";
+        const ASSETS_BASE_URL =
+          "https://raw.githubusercontent.com/Pencil0/femcilskinserver/refs/heads/main/assets/";
+
+        document.getElementById("gallery-btn").addEventListener("click", function () {
+          document.getElementById("gallery_overlay").style.display = "block";
+        });
+        document.getElementById("gallery-exit").addEventListener("click", function () {
+          document.getElementById("gallery_overlay").style.display = "none";
+        });
+
+        loadSkinsIntoGallery("gallery");
+
+        /**
+         * Dynamically loads skin data and builds the gallery cards.
+         * @param {string} containerId The ID of the HTML element where the gallery cards should be appended.
+         */
+        async function loadSkinsIntoGallery(containerId) {
+          const galleryContainer = document.getElementById(containerId);
+
+          if (!galleryContainer) {
+            console.error(
+              `Error: Gallery container with ID '${containerId}' not found.`
+            );
+            return;
+          }
+
+          // Clear any existing content (like "Loading skins..." message)
+          galleryContainer.innerHTML = "";
+          galleryContainer.classList.add("loading"); // Add a loading class for potential CSS styling
+
+          try {
+            const response = await fetch(SKIN_LIST_URL);
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const skinData = await response.json(); // Parse the JSON data from skinList.txt
+
+            // Check if skinData is an object and has properties
+            if (
+              typeof skinData !== "object" ||
+              Object.keys(skinData).length === 0
+            ) {
+              galleryContainer.innerHTML =
+                '<p class="error-message">No skins found or invalid skin list format.</p>';
+              return;
+            }
+
+            // --- Get the skin input textbox (defined once here) ---
+            const skinInput = document.getElementById("skin-input");
+            if (!skinInput) {
+              console.error('Error: "skin-input" textbox not found!');
+              return; // Exit if the input isn't found
+            }
+            // --- END skin input definition ---
+
+            // Loop through each skin in the data
+            for (const key in skinData) {
+              if (skinData.hasOwnProperty(key)) {
+                const skinName = skinData[key];
+
+                // Replace spaces with hyphens for the image filename
+                const formattedSkinFileName = skinName.replace(/ /g, "-");
+
+                const imageUrl = `${ASSETS_BASE_URL}${formattedSkinFileName}.png`; // Use the formatted name
+
+                const button = document.createElement("button");
+                button.id = `gallery-card-${formattedSkinFileName.toLowerCase()}`;
+                button.classList.add("gallery-card");
+                button.innerHTML = `
+            <img class="gallery-img" src="${imageUrl}" alt="${skinName} Skin">
+            <span class="gallery-skin-name">${skinName}</span>
+          `;
+                
+                // --- MODIFIED: Make the click handler async and add all logic ---
+                button.addEventListener("click", async () => {
+                  // Marked as async
+                  console.log(`Skin selected: ${skinName}`);
+
+                  // --- 1. Handle Skin Input Textbox Update (Keyboard Simulation) ---
+                  skinInput.focus();
+                  console.log("Input field focused.");
+
+                  // Clear any existing text first
+                  skinInput.value = "";
+                  const clearEvent = new Event("input", { bubbles: true });
+                  skinInput.dispatchEvent(clearEvent);
+                  console.log("Attempted to clear input.");
+
+                  await new Promise((resolve) => setTimeout(resolve, 50)); // Small delay for game to process clear
+
+                  // Simulate typing each character
+                  for (let i = 0; i < skinName.length; i++) {
+                    const char = skinName[i];
+
+                    const keydownEvent = new KeyboardEvent("keydown", {
+                      key: char,
+                      keyCode: char.charCodeAt(0),
+                      which: char.charCodeAt(0),
+                      bubbles: true,
+                    });
+                    skinInput.dispatchEvent(keydownEvent);
+
+                    skinInput.value += char; // Update the value directly to simulate progression
+                    const inputEvent = new Event("input", { bubbles: true });
+                    skinInput.dispatchEvent(inputEvent);
+
+                    const keyupEvent = new KeyboardEvent("keyup", {
+                      key: char,
+                      keyCode: char.charCodeAt(0),
+                      which: char.charCodeAt(0),
+                      bubbles: true,
+                    });
+                    skinInput.dispatchEvent(keyupEvent);
+
+                    await new Promise((resolve) => setTimeout(resolve, 20)); // Delay between characters
+                  }
+
+                  // Simulate a final 'change' event to ensure the game registers the full input
+                  const changeEvent = new Event("change", { bubbles: true });
+                  skinInput.dispatchEvent(changeEvent);
+                  console.log('Dispatched final "change" event.');
+
+                  // Optional: Uncomment if "Enter" is needed to confirm the name in the game
+                  // const enterEvent = new KeyboardEvent('keydown', {
+                  //     key: 'Enter',
+                  //     keyCode: 13, // KeyCode for Enter
+                  //     which: 13,
+                  //     bubbles: true
+                  // });
+                  // skinInput.dispatchEvent(enterEvent);
+                  // console.log('Dispatched "Enter" keydown event.');
+
+                  // --- 2. Handle .selected-card CSS Class ---
+                  // Get all gallery cards (re-query them because they are dynamically created)
+                  const allGalleryCards =
+                    document.querySelectorAll(".gallery-card");
+
+                  // Remove 'selected-card' from all other cards
+                  allGalleryCards.forEach((otherCard) => {
+                    otherCard.classList.remove("selected-card");
+                  });
+                  // Add 'selected-card' to the currently clicked button
+                  button.classList.add("selected-card");
+                  console.log("Selected class added to card:", button);
+                });
+                
+                // --- END MODIFIED CLICK HANDLER ---
+
+                galleryContainer.appendChild(button);
+              }
+            }
+          } catch (error) {
+            console.error("Error loading skins:", error);
+            galleryContainer.innerHTML =
+              '<p class="error-message">Failed to load skins. Please check your network and the skin list URL.</p>';
+          } finally {
+            galleryContainer.classList.remove("loading"); // Remove loading class
+          }
+        }
+      });
+    </script>
     <style>
       /* General Body Styles */
       body {
@@ -42,10 +208,10 @@
       }
 
       .board {
-        display:block;
-        opacity:1;
+        display: block;
+        opacity: 1;
       }
-      
+
       /* Main Menu Container - Full screen overlay */
       #overlays {
         position: absolute; /* Position relative to the body */
@@ -57,7 +223,13 @@
         justify-content: center; /* Center content horizontally */
         align-items: center; /* Center content vertically */
         background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent overlay */
-        z-index:0;
+        z-index: 0;
+      }
+
+      h3 {
+        margin-top: 5px;
+        margin-bottom: 5px;
+        font-size: 15px;
       }
 
       /* Menu Box - Styled like the bio page's main card */
@@ -138,7 +310,7 @@
       .menu-button:active {
         transform: translateY(0); /* Return to normal position on click */
       }
-      
+
       #settings_overlay {
         position: absolute; /* Position relative to the body */
         top: 0;
@@ -149,9 +321,9 @@
         justify-content: center; /* Center content horizontally */
         align-items: center; /* Center content vertically */
         background-color: rgba(0, 0, 0, 0); /* Semi-transparent overlay */
-        z-index:2;
+        z-index: 2;
       }
-      
+
       /* Settings Panel Styling */
       .settings {
         padding: 12px 12px;
@@ -162,35 +334,35 @@
         text-align: center;
         max-width: 400px;
         width: 90%;
-        height:90%;
-        z-index:3;
+        height: 90%;
+        z-index: 3;
       }
-      
+
       .setting-cards {
         margin-bottom: 12px;
         width: 90%;
         height: auto;
-        z-index:4;
+        z-index: 4;
         padding: 12px 20px;
         border: none;
         border-radius: 12px;
         background-color: #1a1a1a;
-        text-align:center;
-        text-color:#FFFFFF;
-        font-size:14px;
+        text-align: center;
+        text-color: #ffffff;
+        font-size: 14px;
       }
-      
+
       .setting-card-title {
-        text-align:center;
-        text-color:#FFFFFF;
-        font-size:36px;
+        text-align: center;
+        text-color: #ffffff;
+        font-size: 36px;
       }
-      
+
       #settings-music {
         width: calc(100% - 20px);
         padding: 10px;
         margin-bottom: 15px;
-        margin-top:15px;
+        margin-top: 15px;
         border: 1px solid #4a4a4a;
         border-radius: 5px;
         background-color: #3a3a3a;
@@ -198,9 +370,9 @@
         font-size: 1em;
         box-sizing: border-box;
       }
-      
-      .setting-exit{
-        color:#FFFFFF;
+
+      .setting-exit {
+        color: #ffffff;
         width: 90%;
         padding: 12px 20px;
         margin-left: auto;
@@ -211,16 +383,101 @@
         cursor: pointer;
         font-weight: 700;
         background-color: #6c757d; /* A common secondary button color */
-        position:relative;
-        bottom:0;
-        z-index:5;
+        position: relative;
+        bottom: 0;
+        z-index: 5;
       }
-      
+
       .setting-exit:hover {
         background-color: #5a6268;
         transform: translateY(-2px);
       }
-      
+
+      #gallery_overlay {
+        position: absolute; /* Position relative to the body */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: none; /* Hidden by default, client.js will make it visible */
+        justify-content: center; /* Center content horizontally */
+        align-items: center; /* Center content vertically */
+        background-color: rgba(0, 0, 0, 0); /* Semi-transparent overlay */
+        z-index: 2;
+      }
+
+      /* Settings Panel Styling */
+      #gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 100px));
+        grid-auto-rows: 150px;
+        padding: 60px 12px 12px 12px;
+        gap: 12px;
+        margin: auto;
+        background-color: #2a2a2a; /* Card background */
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+        max-width: 1000px;
+        width: 90%;
+        height: 90%;
+        z-index: 3;
+        overflow-y: auto;
+        justify-content: center;
+      }
+
+      .gallery-card {
+        margin: auto;
+        width: 100%;
+        height: 100%;
+        max-width: 100px;
+        max-height: 150px;
+        background-color: #1a1a1a;
+        border-radius: 13px;
+        border: none;
+        font-weight: 700;
+        font-size: 0.9em;
+        color: #ffffff;
+        padding: 5px;
+      }
+
+      .selected-card {
+        box-shadow: 0 0 10px 5px rgba(0, 123, 255, 0.7); /* Blue glow */
+        transform: scale(1.03); /* Slightly enlarge */
+        border-color: #007bff; /* Change border color */
+      }
+
+      .gallery-card:hover {
+        background-color: #0a0a0a;
+        transform: translateY(-2px);
+      }
+
+      .gallery-img {
+        width: 100%;
+        max-width: 150px;
+      }
+
+      #gallery-exit {
+        position:absolute;
+        color: #ffffff;
+        width: 20%;
+        height: 6%;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 50px;
+        font-size: 1.1em;
+        cursor: pointer;
+        font-weight: 700;
+        background-color: #6c757d;
+        z-index: 5;
+        transform: translateX(-50%) translateY(-100%);
+        left:50%;
+      }
+
+      #gallery-exit:hover {
+        background-color: #5a6268;
+        transform: translateX(-50%) translateY(-90%);
+      }
+
       .checkbox label {
         display: block;
         margin-bottom: 8px;
@@ -269,28 +526,57 @@
       }
       #chat_textbox {
         position: absolute; /* Position relative to the body */
-        bottom:0;
-        left:0;
+        bottom: 0;
+        left: 0;
         background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent overlay */
+      }
+
+      .loading-message {
+        color: #aaaaaa;
+        text-align: center;
+        grid-column: 1 / -1; // Span across all columns
+      }
+      
+      #gallery-title {
+        text-shadow: 0 0 20px rgba(0, 162, 255, 0.7); /* Glow effect */
+        position:absolute;
+        transform: translateX(-50%) translateY(-700px);
+        left:50%;
       }
     </style>
   </head>
   <body>
-    <canvas id="canvas" class="board" width="800" height="600">Your browser does not support the canvas tag.</canvas>
+    <canvas id="canvas" class="board" width="800" height="600"
+      >Your browser does not support the canvas tag.</canvas
+    >
+    <div id="gallery_overlay">
+      <div id="gallery">
+        <p class="loading-message">Loading skins...</p>
+      </div>
+      <button id="gallery-exit">Exit</button>
+      <h1 id="gallery-title">Skin Gallery</h1>
+    </div>
     <div id="settings_overlay">
       <div class="settings">
-        <div class="setting-cards"> <!-- Graphics -->
+        <div class="setting-cards">
+          <!-- Graphics -->
           <h1 class="setting-cards-title">Graphics</h1>
           <label><input id="showSkins" type="checkbox" />ѕкιηѕ</label>
           <label><input id="showNames" type="checkbox" />ηαмєѕ</label>
           <label><input id="showColor" type="checkbox" />¢σℓσя</label>
           <label><input id="showMass" type="checkbox" />мαѕѕ</label>
           <label><input id="fillSkin" type="checkbox" />ƒιℓℓ ѕкιη</label>
-          <label><input id="jellyPhysics" type="checkbox" />נєℓℓу ρнуѕι¢ѕ</label>
+          <label
+            ><input id="jellyPhysics" type="checkbox" />נєℓℓу ρнуѕι¢ѕ</label
+          >
         </div>
-        <div class="setting-cards"> <!-- UI -->
+        <div class="setting-cards">
+          <!-- UI -->
           <h1 class="setting-cards-title">Game UI</h1>
-          <label><input id="backgroundSectors" type="checkbox" />вα¢кgяσυη∂ ѕє¢тσяѕ</label>
+          <label
+            ><input id="backgroundSectors" type="checkbox" />вα¢кgяσυη∂
+            ѕє¢тσяѕ</label
+          >
           <label><input id="showMinimap" type="checkbox" />мιηι мαρ</label>
           <label><input id="showPosition" type="checkbox" />ρσѕιтιση</label>
           <label><input id="showBorder" type="checkbox" />вσя∂єя</label>
@@ -298,10 +584,13 @@
           <label><input id="moreZoom" type="checkbox" />zσσм-συт</label>
           <label><input id="showChat" type="checkbox" />¢нαт</label>
         </div>
-        <div class="setting-cards"> <!-- Music & Audio -->
+        <div class="setting-cards">
+          <!-- Music & Audio -->
           <h1 class="setting-cards-title">Music &amp; Audio</h1>
           <label><input id="playSounds" type="checkbox" />Sσυɳԃʂ</label>
-          <label><input id="soundsVolume" type="range" min="0" max="1" step="any"/></label>
+          <label
+            ><input id="soundsVolume" type="range" min="0" max="1" step="any"
+          /></label>
           <select id="settings-music">
             <option value="cycle">Cycle - Cycles through OST</option>
             <option value="none">None - No Music...</option>
@@ -318,7 +607,7 @@
       <div id="connecting" display="none"></div>
       <div class="menu-box">
         <h1 class="menu-title">Femcil Agar.io</h1>
-
+        <h3>Nickname:</h3>
         <div class="input-group">
           <input
             type="text"
@@ -326,11 +615,12 @@
             placeholder="Enter Nickname"
             maxlength="150000"
           />
+          <h3>Skin</h3>
           <input
-            type="text"
+            placeholder="Insert skin name (Gallery can add name!)"
             id="skin-input"
-            placeholder="Skin Name (optional)"
           />
+          <h3>Server:</h3>
           <select id="server-select">
             <option value="femcil-main.onrender.com">Femcil Main</option>
             <option value="femcil-main.onrender.com">Femcil Main Backup</option>
