@@ -1,6 +1,2 @@
-
-# Hello User!
-## Welcome To Pencil Agario
-### Enjoy [Femcil's Agario](https://femcil.glitch.me/pages/agario.html)
-#### Also Things To Come:
-##### Skins and sponsers!
+# Hello
+I have nothing to say here. I code mainly on this webpage project. I don't do much else.
